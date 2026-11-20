@@ -14,20 +14,34 @@ h1{font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:0 0 12px}p
 </head><body>
 <header><div class="brand">EMPIRE<span>COIN</span> · ADMIN</div><button id="logout" hidden>Sign out</button></header>
 <main><section class="panel"><h1>Administration</h1><p id="status">Verifying your secure administrator session…</p><p id="email"></p></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
-const supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
 const status=document.getElementById("status"),logout=document.getElementById("logout");
+let supabase;
+try {
+ if (!window.supabase || typeof window.supabase.createClient !== "function") {
+  throw new Error("Authentication library did not load. Check your internet connection and refresh.");
+ }
+ supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+} catch(e) {
+ status.textContent=e.message || "Could not initialize secure authentication.";
+}
 async function verify(){
+ if (!supabase) return;
+ status.textContent="Checking your saved login session…";
  try{
+  const {data:{session},error:sessionError}=await supabase.auth.getSession();
+  if(sessionError) throw sessionError;
+  if(!session){status.textContent="No active login session found. Redirecting to sign in…";setTimeout(()=>location.replace("login.html"),1800);return;}
   const {data:{user},error}=await supabase.auth.getUser();
-  if(error||!user){location.replace("login.html");return;}
-  if(user.app_metadata?.role!=="admin"){status.textContent="Access denied. This account is not an administrator.";await supabase.auth.signOut();return;}
+  if(error) throw error;
+  if(!user){status.textContent="Your session could not be verified. Please sign in again.";setTimeout(()=>location.replace("login.html"),1800);return;}
+  if(user.app_metadata?.role!=="admin"){status.textContent="Access denied: this account is not an administrator.";await supabase.auth.signOut();return;}
   status.textContent="Administrator verified. You are securely signed in.";
   document.getElementById("email").textContent=user.email||"";
   logout.hidden=false;
- }catch(e){status.textContent="Could not verify your session. Please sign in again.";}
+ }catch(e){status.textContent="Session verification error: "+(e.message||"Please refresh and try again.");}
 }
-logout.addEventListener("click",async()=>{await supabase.auth.signOut();location.replace("login.html");});
+logout.addEventListener("click",async()=>{if(supabase) await supabase.auth.signOut();location.replace("login.html");});
 verify();
 </script></body></html>

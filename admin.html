@@ -2,56 +2,109 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#081426">
-<title>Admin Panel — EmpireCoin</title>
+<title>Admin Dashboard — EmpireCoin</title>
 <style>
-:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 10%,#173453 0,#081426 65%);color:var(--text);font-family:Arial,sans-serif;padding:24px}
-header{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8b66a44;padding:12px 0 22px;gap:12px}
-.brand{letter-spacing:3px;font-weight:bold}.brand span{color:var(--gold2)}button{border:1px solid var(--gold);background:transparent;color:var(--gold2);padding:10px 16px;cursor:pointer}
-main{max-width:900px;margin:55px auto}.panel{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid #d8b66a44;padding:30px}
-h1{font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:0 0 12px}p{color:var(--muted);line-height:1.7}#status{color:var(--gold2);font-size:13px}
+:root{--navy:#081426;--panel:#102641;--panel2:#142f4d;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38;--red:#e58b83;--green:#8bd3a7}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#173453 0,#081426 65%);color:var(--text);font-family:Arial,sans-serif;padding:18px}
+header{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:12px 0 18px;gap:12px}.brand{letter-spacing:3px;font-weight:bold}.brand span{color:var(--gold2)}button,input,select{font:inherit}button{border:1px solid var(--gold);background:transparent;color:var(--gold2);padding:10px 14px;cursor:pointer;border-radius:5px}button:hover{background:#d8b66a18}button:disabled{opacity:.5;cursor:not-allowed}
+main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:22px}h1{font:normal 34px Georgia,serif;margin:0 0 8px}.muted{color:var(--muted)}#status{font-size:13px;color:var(--gold2);margin:0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.tab.active{background:var(--gold);color:#101b29}.panel{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);padding:22px;border-radius:9px;margin-bottom:16px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}.stat{background:#ffffff08;border:1px solid var(--line);padding:18px;border-radius:7px}.stat small{display:block;color:var(--muted);margin-bottom:10px}.stat strong{font-size:24px;color:var(--gold2)}h2{font:normal 23px Georgia,serif;margin:0 0 16px}h3{font-size:16px;color:var(--gold2);margin:0 0 8px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--gold2);font-weight:600}td a{color:var(--gold2);overflow-wrap:anywhere}.pill{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:4px 9px;font-size:11px}.visible{color:var(--green)}.hidden{color:var(--red)}.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input,.field select{width:100%;padding:11px;background:#081a2c;color:var(--text);border:1px solid var(--line);border-radius:5px}.actions{display:flex;gap:7px;flex-wrap:wrap}.danger{border-color:#a85b55;color:#f0aaa2}.primary{background:var(--gold);color:#101b29;font-weight:bold}.note{border-left:3px solid var(--gold);padding:12px 14px;background:#d8b66a0d;color:var(--muted);line-height:1.6;font-size:13px}.hidden-panel{display:none}.empty{padding:25px;text-align:center;color:var(--muted)}footer{max-width:1120px;margin:30px auto;color:#8493a6;font-size:11px}
+@media(max-width:600px){body{padding:12px}.panel{padding:16px}h1{font-size:29px}.welcome{align-items:start}header{padding-bottom:14px}}
 </style>
-</head><body>
+</head>
+<body>
 <header><div class="brand">EMPIRE<span>COIN</span> · ADMIN</div><button id="logout" hidden>Sign out</button></header>
-<main><section class="panel"><h1>Administration</h1><p id="status">Verifying your secure administrator session…</p><p id="email"></p></section></main>
+<main>
+ <div class="welcome"><div><h1>Administration</h1><p class="muted" id="adminEmail">Verifying administrator…</p></div><p id="status">Loading secure session…</p></div>
+ <nav class="tabs" aria-label="Admin sections">
+  <button class="tab active" data-tab="overview">Overview</button><button class="tab" data-tab="social">Social Links</button><button class="tab" data-tab="token">Token Info</button><button class="tab" data-tab="users">Users</button>
+ </nav>
+ <section id="overview" class="tab-panel">
+  <div class="cards">
+   <div class="stat"><small>Administrator session</small><strong id="sessionStat">Verified</strong></div>
+   <div class="stat"><small>Social links saved</small><strong id="linkCount">—</strong></div>
+   <div class="stat"><small>Network</small><strong>TON Testnet</strong></div>
+   <div class="stat"><small>Maximum supply</small><strong>100M EMPC</strong></div>
+  </div>
+  <div class="panel" style="margin-top:16px"><h2>Welcome to EmpireCoin</h2><p class="muted">Use this dashboard to manage public social links and review the published token details. More administration tools will be added with their own secure permissions.</p><div class="note">Security: this dashboard checks the signed-in Supabase user and the protected app_metadata role. Never share your password or secret keys.</div></div>
+ </section>
+ <section id="social" class="tab-panel hidden-panel">
+  <div class="panel">
+   <div class="section-head"><h2>Manage social links</h2><button id="newLink" class="primary">+ Add link</button></div>
+   <p class="muted">These links are stored in Supabase. Only verified administrators can add, edit, show, hide, or delete them.</p>
+   <div id="linkForm" class="hidden-panel">
+    <div class="form-grid">
+     <div class="field"><label for="platform">Platform</label><input id="platform" placeholder="Telegram"></div>
+     <div class="field"><label for="label">Display name</label><input id="label" placeholder="Official Telegram"></div>
+     <div class="field"><label for="url">URL (https://)</label><input id="url" type="url" placeholder="https://t.me/…"></div>
+     <div class="field"><label for="sortOrder">Sort order</label><input id="sortOrder" type="number" value="0"></div>
+    </div>
+    <p style="margin:14px 0"><label><input id="isVisible" type="checkbox" checked> Visible on public website</label></p>
+    <div class="actions"><button id="saveLink" class="primary">Save link</button><button id="cancelLink">Cancel</button></div>
+    <p id="formMessage" class="muted"></p>
+   </div>
+   <div class="table-wrap"><table><thead><tr><th>Platform</th><th>Label</th><th>URL</th><th>Status</th><th>Actions</th></tr></thead><tbody id="linksBody"><tr><td colspan="5">Loading links…</td></tr></tbody></table></div>
+  </div>
+ </section>
+ <section id="token" class="tab-panel hidden-panel">
+  <div class="panel"><h2>EmpireCoin (EMPC)</h2><div class="cards">
+   <div class="stat"><small>Network</small><strong>TON · Testnet</strong></div><div class="stat"><small>Maximum supply</small><strong>100,000,000</strong></div><div class="stat"><small>Decimals</small><strong>9</strong></div><div class="stat"><small>Minting</small><strong>Disabled*</strong></div>
+  </div><p class="muted" style="margin-top:18px">Jetton Master address</p><p style="overflow-wrap:anywhere">kQBMjqVxem4fdM6O4PXhjmMeGvAlAtu5cGr78KO90pDSQs2Q</p><a href="https://testnet.tonviewer.com/kQBMjqVxem4fdM6O4PXhjmMeGvAlAtu5cGr78KO90pDSQs2Q" target="_blank" rel="noopener noreferrer" style="color:var(--gold2)">Open contract in TONViewer ↗</a><p class="note" style="margin-top:18px">*Minting is shown as disabled based on the current project configuration. This dashboard displays reference information; it does not change on-chain token settings. This asset is on Testnet, not Mainnet.</p></div>
+  <div class="panel"><h2>Published allocation</h2><div class="table-wrap"><table><thead><tr><th>Allocation</th><th>Amount</th><th>Share</th></tr></thead><tbody><tr><td>Liquidity</td><td>40,000,000 EMPC</td><td>40%</td></tr><tr><td>Game &amp; Airdrop</td><td>25,000,000 EMPC</td><td>25%</td></tr><tr><td>Marketing</td><td>15,000,000 EMPC</td><td>15%</td></tr><tr><td>Team</td><td>10,000,000 EMPC</td><td>10%</td></tr><tr><td>Ecosystem</td><td>10,000,000 EMPC</td><td>10%</td></tr></tbody></table></div></div>
+ </section>
+ <section id="users" class="tab-panel hidden-panel"><div class="panel"><h2>User management</h2><p class="muted">This section is reserved for secure user administration.</p><div class="note">Not active yet. User listing, role changes, suspension, and account actions require a protected server-side admin workflow. We will not expose privileged Auth operations or secret keys in this public website.</div></div></section>
+</main>
+<footer>EmpireCoin Admin · Secure administrator access required</footer>
 <script>
-const status=document.getElementById("status"),logout=document.getElementById("logout");
-function loadSdk(src,timeoutMs=10000){
- return new Promise((resolve,reject)=>{
-  const script=document.createElement("script");
-  let settled=false;
-  const timer=setTimeout(()=>{if(!settled){settled=true;script.remove();reject(new Error("Timed out loading "+src));}},timeoutMs);
-  script.src=src;
-  script.onload=()=>{if(!settled){settled=true;clearTimeout(timer);resolve();}};
-  script.onerror=()=>{if(!settled){settled=true;clearTimeout(timer);script.remove();reject(new Error("Could not load "+src));}};
-  document.head.appendChild(script);
- });
+const SUPABASE_URL="https://wytdpyvzbrvzlymifpjq.supabase.co";
+const SUPABASE_KEY="sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
+const statusEl=document.getElementById("status"),logout=document.getElementById("logout");
+let db=null,editingId=null;
+function loadSdk(src,timeoutMs=10000){return new Promise((resolve,reject)=>{const s=document.createElement("script");let done=false;const t=setTimeout(()=>{if(!done){done=true;s.remove();reject(new Error("Timed out loading authentication library"));}},timeoutMs);s.src=src;s.onload=()=>{if(!done){done=true;clearTimeout(t);resolve();}};s.onerror=()=>{if(!done){done=true;clearTimeout(t);s.remove();reject(new Error("Could not load authentication library"));}};document.head.appendChild(s);});}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function setForm(open){document.getElementById("linkForm").classList.toggle("hidden-panel",!open);}
+function clearForm(){editingId=null;["platform","label","url"].forEach(id=>document.getElementById(id).value="");document.getElementById("sortOrder").value="0";document.getElementById("isVisible").checked=true;document.getElementById("formMessage").textContent="";document.getElementById("saveLink").textContent="Save link";}
+async function loadLinks(){
+ const body=document.getElementById("linksBody");body.innerHTML='<tr><td colspan="5">Loading links…</td></tr>';
+ const {data,error}=await db.from("social_links").select("*").order("sort_order",{ascending:true}).order("created_at",{ascending:false});
+ if(error){body.innerHTML='<tr><td colspan="5">Could not load links: '+esc(error.message)+'</td></tr>';statusEl.textContent="Social links could not be loaded.";return;}
+ document.getElementById("linkCount").textContent=data.length;
+ if(!data.length){body.innerHTML='<tr><td colspan="5" class="empty">No social links yet. Add the first one above.</td></tr>';return;}
+ body.innerHTML=data.map(x=>'<tr><td>'+esc(x.platform)+'</td><td>'+esc(x.label)+'</td><td><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.url)+'</a></td><td><span class="pill '+(x.is_visible?"visible":"hidden")+'">'+(x.is_visible?"Visible":"Hidden")+'</span></td><td><div class="actions"><button data-edit="'+esc(x.id)+'">Edit</button><button data-toggle="'+esc(x.id)+'">'+(x.is_visible?"Hide":"Show")+'</button><button class="danger" data-delete="'+esc(x.id)+'">Delete</button></div></td></tr>').join("");
+ body.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>editLink(data.find(x=>x.id===b.dataset.edit))));
+ body.querySelectorAll("[data-toggle]").forEach(b=>b.addEventListener("click",()=>toggleLink(data.find(x=>x.id===b.dataset.toggle))));
+ body.querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteLink(data.find(x=>x.id===b.dataset.delete))));
 }
-async function startAdmin(){
- status.textContent="Loading secure authentication library…";
+function editLink(x){editingId=x.id;document.getElementById("platform").value=x.platform;document.getElementById("label").value=x.label;document.getElementById("url").value=x.url;document.getElementById("sortOrder").value=x.sort_order;document.getElementById("isVisible").checked=x.is_visible;document.getElementById("saveLink").textContent="Update link";document.getElementById("formMessage").textContent="Editing selected link.";setForm(true);}
+async function saveLink(){
+ const platform=document.getElementById("platform").value.trim(),label=document.getElementById("label").value.trim(),url=document.getElementById("url").value.trim(),sort_order=Number(document.getElementById("sortOrder").value||0),is_visible=document.getElementById("isVisible").checked,msg=document.getElementById("formMessage");
+ if(!platform||!label||!/^https?:\/\//i.test(url)){msg.textContent="Enter a platform, display name, and valid http/https URL.";return;}
+ const payload={platform,label,url,sort_order,is_visible,updated_at:new Date().toISOString()};
+ const result=editingId?await db.from("social_links").update(payload).eq("id",editingId):await db.from("social_links").insert(payload);
+ if(result.error){msg.textContent="Save failed: "+result.error.message;return;}
+ clearForm();setForm(false);statusEl.textContent="Social link saved.";await loadLinks();
+}
+async function toggleLink(x){const {error}=await db.from("social_links").update({is_visible:!x.is_visible,updated_at:new Date().toISOString()}).eq("id",x.id);if(error){statusEl.textContent="Update failed: "+error.message;return;}await loadLinks();statusEl.textContent="Visibility updated.";}
+async function deleteLink(x){if(!confirm("Delete the social link “"+x.label+"”? This cannot be undone."))return;const {error}=await db.from("social_links").delete().eq("id",x.id);if(error){statusEl.textContent="Delete failed: "+error.message;return;}await loadLinks();statusEl.textContent="Social link deleted.";}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab-panel").forEach(x=>x.classList.toggle("hidden-panel",x.id!==b.dataset.tab));}));
+document.getElementById("newLink").addEventListener("click",()=>{clearForm();setForm(true);});
+document.getElementById("cancelLink").addEventListener("click",()=>{clearForm();setForm(false);});
+document.getElementById("saveLink").addEventListener("click",saveLink);
+async function start(){
  try{
-  try{await loadSdk("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");}
-  catch(firstError){
-   status.textContent="Primary authentication source unavailable. Trying backup…";
-   await loadSdk("https://unpkg.com/@supabase/supabase-js@2");
-  }
-  if(!window.supabase||typeof window.supabase.createClient!=="function") throw new Error("Authentication library loaded but could not be initialized.");
-  const supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
-  status.textContent="Checking your saved login session…";
-  const {data:{session},error:sessionError}=await supabase.auth.getSession();
-  if(sessionError) throw sessionError;
-  if(!session){status.textContent="No active login session found. Redirecting to sign in…";setTimeout(()=>location.replace("login.html"),1800);return;}
-  const {data:{user},error}=await supabase.auth.getUser();
-  if(error) throw error;
-  if(!user){status.textContent="Your session could not be verified. Please sign in again.";setTimeout(()=>location.replace("login.html"),1800);return;}
-  if(user.app_metadata?.role!=="admin"){status.textContent="Access denied: this account is not an administrator.";await supabase.auth.signOut();return;}
-  status.textContent="Administrator verified. You are securely signed in.";
-  document.getElementById("email").textContent=user.email||"";
-  logout.hidden=false;
-  logout.addEventListener("click",async()=>{await supabase.auth.signOut();location.replace("login.html");});
- }catch(e){
-  status.textContent="Authentication error: "+(e.message||"Please refresh and try again.");
- }
+  statusEl.textContent="Loading secure authentication…";
+  try{await loadSdk("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");}catch(e){await loadSdk("https://unpkg.com/@supabase/supabase-js@2");}
+  if(!window.supabase?.createClient)throw new Error("Supabase authentication library is unavailable.");
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const {data:{session},error:se}=await db.auth.getSession();if(se)throw se;
+  if(!session){statusEl.textContent="No active login. Redirecting…";setTimeout(()=>location.replace("login.html"),1500);return;}
+  const {data:{user},error}=await db.auth.getUser();if(error)throw error;
+  if(!user||user.app_metadata?.role!=="admin"){statusEl.textContent="Access denied. Administrator role required.";await db.auth.signOut();return;}
+  document.getElementById("adminEmail").textContent=user.email||"Administrator";
+  statusEl.textContent="Administrator verified.";
+  logout.hidden=false;logout.addEventListener("click",async()=>{await db.auth.signOut();location.replace("login.html");});
+  await loadLinks();
+ }catch(e){statusEl.textContent="Dashboard error: "+(e.message||"Please refresh and try again.");}
 }
-startAdmin();
-</script></body></html>
+start();
+</script>
+</body></html>

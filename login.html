@@ -38,7 +38,6 @@
       <button id="submitButton" type="submit">SIGN IN</button>
     </form>
     <div id="message" role="status" aria-live="polite"></div>
-    <a class="back" href="index.html">← Back to EmpireCoin home</a>
     <div class="note">Secure authentication powered by Supabase</div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -62,11 +61,14 @@
         if (error) throw error;
         const role = data.user?.app_metadata?.role;
         if (role === "admin") {
-          message.textContent = "Admin sign-in successful. Your secure session is active.";
+          message.textContent = "Admin verified. Opening the admin panel…";
+          button.textContent = "SUCCESS";
+          window.location.replace("admin.html");
+          return;
         } else {
-          message.textContent = "Sign-in successful. This account does not have admin access.";
+          await supabase.auth.signOut();
+          throw new Error("This account does not have administrator access.");
         }
-        button.textContent = "SIGNED IN";
       } catch (error) {
         message.textContent = error.message || "Unable to sign in. Please check your details.";
         button.disabled = false;

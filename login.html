@@ -30,12 +30,12 @@
     <div class="sub">THE EMPIRE ECOSYSTEM</div>
     <h1>Welcome back</h1>
     <p>Sign in securely to your EmpireCoin account.</p>
-    <form id="loginForm">
+    <form id="loginForm" onsubmit="return false;" novalidate>
       <label for="email">EMAIL ADDRESS</label>
       <input id="email" type="email" autocomplete="username" placeholder="Enter your email" required>
       <label for="password">PASSWORD</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
-      <button id="submitButton" type="submit">SIGN IN</button>
+      <button id="submitButton" type="button">SIGN IN</button>
     </form>
     <div id="message" role="status" aria-live="polite"></div>
     <div class="note">Secure authentication powered by Supabase</div>
@@ -44,13 +44,17 @@
   <script>
     const SUPABASE_URL = "https://wytdpyvzbrvzlymifpjq.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
     const form = document.getElementById("loginForm");
     const button = document.getElementById("submitButton");
     const message = document.getElementById("message");
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      message.textContent = "Login service did not load. Please refresh the page and try again.";
+      button.disabled = true;
+      throw new Error("Supabase JavaScript library did not load.");
+    }
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    button.addEventListener("click", async () => {
       button.disabled = true;
       button.textContent = "SIGNING IN...";
       message.textContent = "";
@@ -59,11 +63,13 @@
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        const role = data.user?.app_metadata?.role;
+        const { data: refreshed, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        const role = refreshed.user?.app_metadata?.role;
         if (role === "admin") {
           message.textContent = "Admin verified. Opening the admin panel…";
           button.textContent = "SUCCESS";
-          window.location.replace("admin.html");
+          window.location.href = "admin.html";
           return;
         } else {
           await supabase.auth.signOut();

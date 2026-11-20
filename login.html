@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081426">
+  <title>Sign In — EmpireCoin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:rgba(216,182,106,.24)}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 20%,#173453 0,#081426 65%);color:var(--text);font-family:"DM Sans",sans-serif;display:grid;place-items:center;padding:24px}
+    .card{width:min(100%,440px);padding:38px 32px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);box-shadow:0 25px 70px #0006;text-align:center}
+    .logo{width:66px;height:66px;object-fit:contain;border-radius:50%;border:1px solid var(--line);margin-bottom:14px}
+    .brand{font-weight:700;letter-spacing:3px;font-size:15px}.gold{color:var(--gold2)}.sub{font-size:9px;letter-spacing:3px;color:var(--muted);margin-top:7px}
+    h1{font:600 34px "Playfair Display",serif;margin:32px 0 8px}p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 25px}
+    form{text-align:left}label{display:block;color:var(--gold2);font-size:11px;margin:17px 0 8px}
+    input{width:100%;padding:14px 13px;background:#081426;border:1px solid #ffffff24;color:var(--text);font:14px "DM Sans",sans-serif;outline:none;border-radius:2px}
+    input:focus{border-color:var(--gold)}button{width:100%;margin-top:24px;padding:15px;border:0;background:linear-gradient(110deg,#b99045,#efd99a);color:#152033;font-weight:700;font-size:13px;cursor:pointer}
+    button:disabled{opacity:.65;cursor:wait}#message{min-height:24px;margin-top:18px;font-size:12px;line-height:1.6;color:var(--gold2);overflow-wrap:anywhere}
+    .back{display:inline-block;margin-top:18px;color:var(--muted);font-size:12px;text-decoration:none}.back:hover{color:var(--gold2)}
+    .note{font-size:10px;color:#8291a3;margin-top:26px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="https://i.ibb.co/Cpy4zkWD/file-0000000027fc8210929d310091b874ef.png" alt="EmpireCoin logo">
+    <div class="brand">EMPIRE<span class="gold">COIN</span></div>
+    <div class="sub">THE EMPIRE ECOSYSTEM</div>
+    <h1>Welcome back</h1>
+    <p>Sign in securely to your EmpireCoin account.</p>
+    <form id="loginForm">
+      <label for="email">EMAIL ADDRESS</label>
+      <input id="email" type="email" autocomplete="username" placeholder="Enter your email" required>
+      <label for="password">PASSWORD</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+      <button id="submitButton" type="submit">SIGN IN</button>
+    </form>
+    <div id="message" role="status" aria-live="polite"></div>
+    <a class="back" href="index.html">← Back to EmpireCoin home</a>
+    <div class="note">Secure authentication powered by Supabase</div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://wytdpyvzbrvzlymifpjq.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    const form = document.getElementById("loginForm");
+    const button = document.getElementById("submitButton");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      button.textContent = "SIGNING IN...";
+      message.textContent = "";
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        const role = data.user?.app_metadata?.role;
+        if (role === "admin") {
+          message.textContent = "Admin sign-in successful. Your secure session is active.";
+        } else {
+          message.textContent = "Sign-in successful. This account does not have admin access.";
+        }
+        button.textContent = "SIGNED IN";
+      } catch (error) {
+        message.textContent = error.message || "Unable to sign in. Please check your details.";
+        button.disabled = false;
+        button.textContent = "SIGN IN";
+      }
+    });
+  </script>
+</body>
+</html>

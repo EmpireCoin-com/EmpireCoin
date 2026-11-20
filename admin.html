@@ -14,24 +14,30 @@ h1{font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:0 0 12px}p
 </head><body>
 <header><div class="brand">EMPIRE<span>COIN</span> · ADMIN</div><button id="logout" hidden>Sign out</button></header>
 <main><section class="panel"><h1>Administration</h1><p id="status">Verifying your secure administrator session…</p><p id="email"></p></section></main>
-<script>document.getElementById("status").textContent="Updated admin page loaded. Checking authentication library…";</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const status=document.getElementById("status"),logout=document.getElementById("logout");
-status.textContent="Admin page script loaded. Starting secure session check…";
-let supabase;
-try {
- if (!window.supabase || typeof window.supabase.createClient !== "function") {
-  throw new Error("Authentication library did not load. Check your internet connection and refresh.");
- }
- supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
-} catch(e) {
- status.textContent=e.message || "Could not initialize secure authentication.";
+function loadSdk(src,timeoutMs=10000){
+ return new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  let settled=false;
+  const timer=setTimeout(()=>{if(!settled){settled=true;script.remove();reject(new Error("Timed out loading "+src));}},timeoutMs);
+  script.src=src;
+  script.onload=()=>{if(!settled){settled=true;clearTimeout(timer);resolve();}};
+  script.onerror=()=>{if(!settled){settled=true;clearTimeout(timer);script.remove();reject(new Error("Could not load "+src));}};
+  document.head.appendChild(script);
+ });
 }
-async function verify(){
- if (!supabase) return;
- status.textContent="Checking your saved login session…";
+async function startAdmin(){
+ status.textContent="Loading secure authentication library…";
  try{
+  try{await loadSdk("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");}
+  catch(firstError){
+   status.textContent="Primary authentication source unavailable. Trying backup…";
+   await loadSdk("https://unpkg.com/@supabase/supabase-js@2");
+  }
+  if(!window.supabase||typeof window.supabase.createClient!=="function") throw new Error("Authentication library loaded but could not be initialized.");
+  const supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+  status.textContent="Checking your saved login session…";
   const {data:{session},error:sessionError}=await supabase.auth.getSession();
   if(sessionError) throw sessionError;
   if(!session){status.textContent="No active login session found. Redirecting to sign in…";setTimeout(()=>location.replace("login.html"),1800);return;}
@@ -42,8 +48,10 @@ async function verify(){
   status.textContent="Administrator verified. You are securely signed in.";
   document.getElementById("email").textContent=user.email||"";
   logout.hidden=false;
- }catch(e){status.textContent="Session verification error: "+(e.message||"Please refresh and try again.");}
+  logout.addEventListener("click",async()=>{await supabase.auth.signOut();location.replace("login.html");});
+ }catch(e){
+  status.textContent="Authentication error: "+(e.message||"Please refresh and try again.");
+ }
 }
-logout.addEventListener("click",async()=>{if(supabase) await supabase.auth.signOut();location.replace("login.html");});
-verify();
+startAdmin();
 </script></body></html>

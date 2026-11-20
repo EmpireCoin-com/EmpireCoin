@@ -14,6 +14,7 @@ h1{font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:0 0 12px}p
 </head><body>
 <header><div class="brand">EMPIRE<span>COIN</span> · ADMIN</div><button id="logout" hidden>Sign out</button></header>
 <main><section class="panel"><h1>Administration</h1><p id="status">Verifying your secure administrator session…</p><p id="email"></p></section></main>
+<script>document.getElementById("status").textContent="Updated admin page loaded. Checking authentication library…";</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const status=document.getElementById("status"),logout=document.getElementById("logout");

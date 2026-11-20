@@ -30,36 +30,41 @@
     <div class="sub">THE EMPIRE ECOSYSTEM</div>
     <h1>Welcome back</h1>
     <p>Sign in securely to your EmpireCoin account.</p>
-    <form id="loginForm" onsubmit="return false;" novalidate>
+    <form id="loginForm" onsubmit="loginEmpire(event)" novalidate>
       <label for="email">EMAIL ADDRESS</label>
       <input id="email" type="email" autocomplete="username" placeholder="Enter your email" required>
       <label for="password">PASSWORD</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
-      <button id="submitButton" type="button">SIGN IN</button>
+      <button id="submitButton" type="submit">SIGN IN</button>
     </form>
-    <div id="message" role="status" aria-live="polite"></div>
+    <div id="message" role="status" aria-live="polite">Please enter your email and password.</div>
     <div class="note">Secure authentication powered by Supabase</div>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://wytdpyvzbrvzlymifpjq.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
-    const form = document.getElementById("loginForm");
     const button = document.getElementById("submitButton");
     const message = document.getElementById("message");
 
-    if (!window.supabase || typeof window.supabase.createClient !== "function") {
-      message.textContent = "Login service did not load. Please refresh the page and try again.";
-      button.disabled = true;
-      throw new Error("Supabase JavaScript library did not load.");
-    }
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-    button.addEventListener("click", async () => {
+    async function loginEmpire(event) {
+      event.preventDefault();
+      if (!window.supabase || typeof window.supabase.createClient !== "function") {
+        message.textContent = "Login service could not load. Check your internet connection and refresh this page.";
+        return;
+      }
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
       button.disabled = true;
       button.textContent = "SIGNING IN...";
       message.textContent = "";
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
+      if (!email || !password) {
+        message.textContent = "Please enter both email and password.";
+        button.disabled = false;
+        button.textContent = "SIGN IN";
+        return;
+      }
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -69,7 +74,7 @@
         if (role === "admin") {
           message.textContent = "Admin verified. Opening the admin panel…";
           button.textContent = "SUCCESS";
-          window.location.href = "admin.html";
+          window.location.assign(new URL("admin.html", window.location.href).href);
           return;
         } else {
           await supabase.auth.signOut();
@@ -80,7 +85,8 @@
         button.disabled = false;
         button.textContent = "SIGN IN";
       }
-    });
+    }
+    window.loginEmpire = loginEmpire;
   </script>
 </body>
 </html>

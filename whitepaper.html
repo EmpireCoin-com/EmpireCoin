@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The official EmpireCoin (EMPC) whitepaper: project overview, token design, allocation, transparency and roadmap.">
+  <meta name="theme-color" content="#081426">
+  <title>EmpireCoin (EMPC) — Whitepaper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .paper-hero{padding:82px 0 55px;border-bottom:1px solid var(--line)}
+    .paper-hero h1{font-size:clamp(42px,6vw,66px);margin:22px 0 14px}
+    .paper-hero p{max-width:720px;color:var(--muted);line-height:1.9;font-size:14px}
+    .paper-meta{display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:25px;color:var(--muted);font-size:11px}
+    .paper-meta strong{color:var(--gold2);font-weight:600}
+    .paper-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:55px;padding-top:55px;padding-bottom:90px}
+    .paper-toc{position:sticky;top:25px;align-self:start;padding:22px;background:#10264180;border:1px solid rgba(255,255,255,.08)}
+    .paper-toc b{display:block;color:var(--gold2);font-size:10px;letter-spacing:2px;margin-bottom:15px}
+    .paper-toc a{display:block;color:var(--muted);font-size:11px;line-height:1.6;padding:7px 0}
+    .paper-toc a:hover{color:var(--gold2)}
+    .paper-content section{padding:0 0 38px;margin:0 0 38px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:25px}
+    .paper-content h2{font-size:30px;margin:0 0 17px;color:var(--gold2)}
+    .paper-content h3{font-family:"Playfair Display",serif;font-size:19px;margin:25px 0 10px}
+    .paper-content p,.paper-content li{font-size:13px;line-height:1.95;color:#c0cad5}
+    .paper-content ul{padding-left:20px}
+    .paper-content li{padding:3px 0}
+    .paper-callout{padding:18px 20px;border-left:2px solid var(--gold);background:#10264180;margin:20px 0}
+    .paper-callout p{margin:0}
+    .paper-table{width:100%;border-collapse:collapse;margin:18px 0}
+    .paper-table th,.paper-table td{text-align:left;padding:13px 12px;border-bottom:1px solid rgba(255,255,255,.1);font-size:12px;color:#c0cad5}
+    .paper-table th{color:var(--gold2);font-weight:600}
+    .paper-table td:last-child,.paper-table th:last-child{text-align:right}
+    .paper-disclaimer{font-size:11px!important;color:#9eacbc!important}
+    @media(max-width:760px){.paper-layout{grid-template-columns:1fr;gap:28px;padding-top:30px}.paper-toc{position:static;display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.paper-toc b{grid-column:1/-1}.paper-hero{padding-top:60px}.paper-content h2{font-size:26px}}
+  </style>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark">♛</span><span>EMPIRE<span class="brand-gold">COIN</span><small>THE NEXT CHAPTER</small></span></a>
+    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="#overview">Overview</a>
+      <a href="#tokenomics">Tokenomics</a>
+      <a href="#roadmap">Roadmap</a>
+      <a class="nav-cta" href="#disclaimer">Important Notice</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="paper-hero section-wrap">
+      <div class="eyebrow"><span></span> OFFICIAL PROJECT DOCUMENT</div>
+      <h1>EmpireCoin <em>Whitepaper</em></h1>
+      <p>A project introduction and reference document describing the current EMPC token design, allocation principles, transparency commitments and intended development direction.</p>
+      <div class="paper-meta"><span>Token: <strong>EMPC</strong></span><span>Network: <strong>TON — Testnet stage</strong></span><span>Total supply: <strong>100,000,000 EMPC</strong></span><span>Version: <strong>1.0 — 20 November 2026</strong></span></div>
+    </section>
+
+    <div class="paper-layout section-wrap">
+      <aside class="paper-toc">
+        <b>CONTENTS</b>
+        <a href="#overview">01. Project Overview</a>
+        <a href="#vision">02. Vision & Principles</a>
+        <a href="#technology">03. Technology & Token</a>
+        <a href="#tokenomics">04. Tokenomics</a>
+        <a href="#wallets">05. Allocation & Wallets</a>
+        <a href="#team">06. Team Commitment</a>
+        <a href="#roadmap">07. Roadmap</a>
+        <a href="#risks">08. Risks</a>
+        <a href="#disclaimer">09. Disclaimer</a>
+      </aside>
+
+      <article class="paper-content">
+        <section id="overview">
+          <h2>01. Project Overview</h2>
+          <p>EmpireCoin (EMPC) is a digital token project being developed on The Open Network (TON). The project aims to build a transparent token foundation that can support future community participation and ecosystem initiatives.</p>
+          <p>At the date of this document, the project is in its TON testnet stage. Testnet activity is intended for development and testing; testnet tokens are not mainnet assets and should not be represented as having established market value.</p>
+        </section>
+
+        <section id="vision">
+          <h2>02. Vision & Principles</h2>
+          <p>The long-term direction of EmpireCoin is to develop a community-oriented ecosystem around the EMPC token. Development will proceed in stages, with public information and verifiable on-chain records used wherever practical.</p>
+          <h3>Core principles</h3>
+          <ul>
+            <li><strong>Transparency:</strong> publish token parameters, allocation information and relevant wallet references when verified.</li>
+            <li><strong>Responsible development:</strong> build and test features before presenting them as available.</li>
+            <li><strong>Fixed supply design:</strong> the current token configuration is intended to have a fixed supply without additional minting.</li>
+            <li><strong>Community participation:</strong> explore useful ecosystem activities and community programs over time.</li>
+          </ul>
+        </section>
+
+        <section id="technology">
+          <h2>03. Technology & Token</h2>
+          <p>EmpireCoin is designed as a TON Jetton. The project’s current token parameters are:</p>
+          <table class="paper-table">
+            <tr><th>Parameter</th><th>Current specification</th></tr>
+            <tr><td>Token name</td><td>EmpireCoin</td></tr>
+            <tr><td>Symbol</td><td>EMPC</td></tr>
+            <tr><td>Blockchain</td><td>TON</td></tr>
+            <tr><td>Decimals</td><td>9</td></tr>
+            <tr><td>Total supply</td><td>100,000,000 EMPC</td></tr>
+            <tr><td>Minting</td><td>Configured as non-mintable</td></tr>
+            <tr><td>Current stage</td><td>Testnet</td></tr>
+          </table>
+          <div class="paper-callout"><p>The token contract address and verified explorer links will be published here after they are confirmed. The team wallet address is not the token contract address.</p></div>
+        </section>
+
+        <section id="tokenomics">
+          <h2>04. Tokenomics</h2>
+          <p>The planned allocation of the 100,000,000 EMPC total supply is:</p>
+          <table class="paper-table">
+            <tr><th>Allocation</th><th>Amount</th><th>Share</th></tr>
+            <tr><td>Liquidity</td><td>40,000,000 EMPC</td><td>40%</td></tr>
+            <tr><td>Game & Airdrop</td><td>25,000,000 EMPC</td><td>25%</td></tr>
+            <tr><td>Marketing</td><td>15,000,000 EMPC</td><td>15%</td></tr>
+            <tr><td>Team</td><td>10,000,000 EMPC</td><td>10%</td></tr>
+            <tr><td>Ecosystem</td><td>10,000,000 EMPC</td><td>10%</td></tr>
+            <tr><th>Total</th><th>100,000,000 EMPC</th><th>100%</th></tr>
+          </table>
+          <p>These categories describe the project’s stated allocation plan. They do not guarantee that any allocation will generate revenue, increase in value or be distributed on a particular schedule. Wallet balances and transfers should be checked independently on the relevant TON network.</p>
+        </section>
+
+        <section id="wallets">
+          <h2>05. Allocation & Wallet Transparency</h2>
+          <p>The project has organized token holdings across designated wallets corresponding to its allocation categories. Wallet references and balances should be checked directly on-chain; this document does not replace blockchain verification.</p>
+          <h3>Published team wallet reference</h3>
+          <p><strong>Address:</strong> <code>0QAgyOl6sI4y31WMhYtV3c99CEsaocvWZ4LOufm6fcsyEN0p</code></p>
+          <p><a class="text-link" href="https://tonviewer.com/0QAgyOl6sI4y31WMhYtV3c99CEsaocvWZ4LOufm6fcsyEN0p" target="_blank" rel="noopener noreferrer">View team wallet on TONViewer ↗</a></p>
+          <p class="paper-disclaimer">This is a team wallet reference, not the EMPC Jetton master contract address. The explorer link must be interpreted in the correct network context.</p>
+        </section>
+
+        <section id="team">
+          <h2>06. Team Commitment</h2>
+          <p>The project has publicly stated a six-month commitment concerning 10,000,000 EMPC allocated to the team wallet.</p>
+          <table class="paper-table">
+            <tr><th>Commitment detail</th><th>Published information</th></tr>
+            <tr><td>Amount</td><td>10,000,000 EMPC</td></tr>
+            <tr><td>Start date</td><td>20 November 2026</td></tr>
+            <tr><td>End date</td><td>20 May 2027</td></tr>
+            <tr><td>Duration</td><td>Six calendar months</td></tr>
+          </table>
+          <div class="paper-callout"><p><strong>Important:</strong> this is a public commitment, not a smart-contract-enforced token lock. The wallet owner may technically be able to transfer the tokens before the stated end date. Anyone reviewing this commitment should independently monitor the wallet’s on-chain activity.</p></div>
+        </section>
+
+        <section id="roadmap">
+          <h2>07. Roadmap</h2>
+          <p>The roadmap below describes broad development priorities, not guaranteed delivery dates or completed milestones.</p>
+          <h3>Phase 1 — Foundation</h3>
+          <p>Establish the project identity, publish initial token information and maintain the public website.</p>
+          <h3>Phase 2 — Transparency</h3>
+          <p>Publish verified contract details, relevant wallet references and clearer documentation as information becomes available.</p>
+          <h3>Phase 3 — Community</h3>
+          <p>Develop official communication channels and explore community participation initiatives.</p>
+          <h3>Phase 4 — Ecosystem</h3>
+          <p>Research and build practical ecosystem utilities, subject to technical, security and operational readiness.</p>
+        </section>
+
+        <section id="risks">
+          <h2>08. Risks & Considerations</h2>
+          <ul>
+            <li>Blockchain projects involve technical, operational, regulatory and market risks.</li>
+            <li>Testnet tokens are for testing and do not establish a right to receive mainnet tokens or monetary value.</li>
+            <li>Token prices, liquidity, exchange listings and future demand are not guaranteed.</li>
+            <li>Wallet addresses, balances and transfers should be independently verified using trusted TON tools.</li>
+            <li>Roadmap items may change, be delayed or not be completed.</li>
+            <li>Users should protect their own wallet credentials and never share seed phrases or private keys.</li>
+          </ul>
+        </section>
+
+        <section id="disclaimer">
+          <h2>09. Disclaimer</h2>
+          <p>This whitepaper is an informational description of the EmpireCoin project and its stated plans as of 20 November 2026. It is not financial, investment, legal or tax advice, and it is not an offer or solicitation to buy or sell any asset.</p>
+          <p>No promise is made regarding profits, token value, liquidity, exchange listings, returns or future utility. All plans and specifications may be updated as development progresses. Readers should conduct their own research and seek independent professional advice where appropriate.</p>
+          <p class="paper-disclaimer">Document version 1.0 · Published 20 November 2026 · EmpireCoin (EMPC)</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand" href="index.html"><span class="brand-mark">♛</span><span>EMPIRE<span class="brand-gold">COIN</span><small>THE NEXT CHAPTER</small></span></a>
+    <p>© 2026 EmpireCoin. All rights reserved.</p>
+    <a href="index.html">Back to Home ↑</a>
+  </footer>
+  <script>
+    const menuButton = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('.site-header nav');
+    menuButton.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+    });
+  </script>
+</body>
+</html>

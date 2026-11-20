@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#081426">
+<title>Admin Panel — EmpireCoin</title>
+<style>
+:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 10%,#173453 0,#081426 65%);color:var(--text);font-family:Arial,sans-serif;padding:24px}
+header{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8b66a44;padding:12px 0 22px;gap:12px}
+.brand{letter-spacing:3px;font-weight:bold}.brand span{color:var(--gold2)}button{border:1px solid var(--gold);background:transparent;color:var(--gold2);padding:10px 16px;cursor:pointer}
+main{max-width:900px;margin:55px auto}.panel{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid #d8b66a44;padding:30px}
+h1{font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:0 0 12px}p{color:var(--muted);line-height:1.7}#status{color:var(--gold2);font-size:13px}
+</style>
+</head><body>
+<header><div class="brand">EMPIRE<span>COIN</span> · ADMIN</div><button id="logout" hidden>Sign out</button></header>
+<main><section class="panel"><h1>Administration</h1><p id="status">Verifying your secure administrator session…</p><p id="email"></p></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabase=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+const status=document.getElementById("status"),logout=document.getElementById("logout");
+async function verify(){
+ try{
+  const {data:{user},error}=await supabase.auth.getUser();
+  if(error||!user){location.replace("login.html");return;}
+  if(user.app_metadata?.role!=="admin"){status.textContent="Access denied. This account is not an administrator.";await supabase.auth.signOut();return;}
+  status.textContent="Administrator verified. You are securely signed in.";
+  document.getElementById("email").textContent=user.email||"";
+  logout.hidden=false;
+ }catch(e){status.textContent="Could not verify your session. Please sign in again.";}
+}
+logout.addEventListener("click",async()=>{await supabase.auth.signOut();location.replace("login.html");});
+verify();
+</script></body></html>

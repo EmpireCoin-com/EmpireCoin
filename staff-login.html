@@ -35,6 +35,7 @@
     <button id="telegramButton" type="button">CONTINUE WITH TELEGRAM</button>
     <div id="identity" class="identity hidden"></div>
     <button id="dashboardButton" class="hidden" type="button">OPEN STAFF DASHBOARD</button>
+    <button id="linkBotButton" class="hidden secondary" type="button">LINK TELEGRAM BOT</button>
     <button id="signOutButton" class="secondary hidden" type="button">SIGN OUT</button>
     <div id="message" role="status" aria-live="polite">Telegram authentication is ready.</div>
     <div class="small">Telegram sign-in verifies your identity only. It does not automatically grant official staff status or activate a staff account.</div>
@@ -47,6 +48,7 @@
     const telegramButton = document.getElementById("telegramButton");
     const signOutButton = document.getElementById("signOutButton");
     const dashboardButton = document.getElementById("dashboardButton");
+    const linkBotButton = document.getElementById("linkBotButton");
     const identity = document.getElementById("identity");
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const redirectUrl = new URL("staff-login.html", window.location.href).href;
@@ -56,6 +58,7 @@
         telegramButton.classList.remove("hidden");
         signOutButton.classList.add("hidden");
         dashboardButton.classList.add("hidden");
+        linkBotButton.classList.add("hidden");
         identity.classList.add("hidden");
         message.textContent = "Telegram authentication is ready.";
         return;
@@ -65,6 +68,7 @@
       telegramButton.classList.add("hidden");
       signOutButton.classList.remove("hidden");
       dashboardButton.classList.remove("hidden");
+      linkBotButton.classList.remove("hidden");
       identity.classList.remove("hidden");
       identity.textContent = "Signed in as: " + display;
       message.textContent = "Telegram identity verified. Official staff registration is the next step; no staff privileges have been granted.";
@@ -87,6 +91,33 @@
     });
 
     dashboardButton.addEventListener("click", () => { window.location.href = "staff-dashboard.html"; });
+
+    linkBotButton.addEventListener("click", async () => {
+      linkBotButton.disabled = true;
+      message.textContent = "Creating a secure one-time Telegram link code…";
+      try {
+        const { data: sessionData } = await db.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) throw new Error("Please sign in with Telegram first.");
+        const response = await fetch(SUPABASE_URL + "/functions/v1/empirecoin-telegram-bot/link-code", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + accessToken,
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.code) throw new Error(result.error || "Could not create link code.");
+        message.textContent = "Your one-time code: " + result.code + ". Open @EmpireCoin_Official_Bot and send: /link " + result.code + " (valid for 10 minutes).";
+        linkBotButton.textContent = "GENERATE NEW LINK CODE";
+      } catch (error) {
+        message.textContent = error.message || "Telegram linking failed.";
+      } finally {
+        linkBotButton.disabled = false;
+      }
+    });
 
     signOutButton.addEventListener("click", async () => {
       signOutButton.disabled = true;

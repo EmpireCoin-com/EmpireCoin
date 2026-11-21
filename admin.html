@@ -69,7 +69,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
 
  <section id="mining" class="tab-panel hidden-panel">
   <div class="panel">
-   <div class="section-head"><div><h2>EMPC Mining Pool</h2><p class="muted">Manage the dedicated 5% allocation. Opening Mining allows eligible active staff to start 24-hour cycles.</p></div><div class="actions"><button id="testTelegramMining" type="button">Test Telegram Connection</button><button id="toggleMining" class="primary" type="button">Loading…</button></div></div><p id="telegramMiningTest" class="muted" aria-live="polite">Telegram verification has not been tested yet.</p>
+   <div class="section-head"><div><h2>EMPC Mining Pool</h2><p class="muted">Manage the dedicated 5% allocation. Opening Mining allows eligible active staff to start 24-hour cycles.</p></div><div class="actions"><button id="linkAdminTelegram" type="button">Link Admin Telegram</button><button id="testTelegramMining" type="button">Test Telegram Connection</button><button id="toggleMining" class="primary" type="button">Loading…</button></div></div><p id="telegramMiningTest" class="muted" aria-live="polite">Telegram verification has not been tested yet.</p><p id="adminTelegramLinkStatus" class="muted" aria-live="polite">Link the administrator Telegram account before testing channel membership.</p>
    <p id="miningAdminStatus" class="muted" aria-live="polite">Loading secure Mining settings…</p>
    <div class="cards">
     <div class="stat"><small>Total Mining allocation</small><strong id="adminMiningAllocation">—</strong></div>
@@ -222,6 +222,17 @@ async function miningAdminApi(payload){
  if(!response.ok)throw new Error(result.error||"Mining administration request failed.");
  return result;
 }
+document.getElementById("linkAdminTelegram").addEventListener("click",async()=>{
+ const button=document.getElementById("linkAdminTelegram"),status=document.getElementById("adminTelegramLinkStatus");
+ button.disabled=true;status.textContent="Generating a secure one-time Telegram link code…";
+ try{
+  const result=await miningAdminApi({action:"admin_generate_telegram_link_code"});
+  if(!result.ok||!result.code)throw new Error(result.error||"Could not generate a link code.");
+  status.textContent="Open @EmpireCoin_Official_Bot and send this exact command within 10 minutes: /link "+result.code;
+  if(navigator.clipboard?.writeText)navigator.clipboard.writeText("/link "+result.code).catch(()=>{});
+ }catch(e){status.textContent="Telegram link failed: "+(e.message||"Unknown error");}
+ finally{button.disabled=false}
+});
 document.getElementById("testTelegramMining").addEventListener("click",async()=>{
  const button=document.getElementById("testTelegramMining"),resultEl=document.getElementById("telegramMiningTest");
  button.disabled=true;resultEl.textContent="Testing Telegram bot token and official channel access…";

@@ -64,7 +64,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
    <p id="tokenMessage" class="muted" aria-live="polite"></p>
    <div class="note">Important: these are website display settings only. Changing the network, supply, decimals, minting label, or contract address here does not change the blockchain. Verify on-chain details before publishing edits.</div>
   </div>
-  <div class="panel"><h2>Published allocation</h2><div class="table-wrap"><table><thead><tr><th>Allocation</th><th>Amount</th><th>Share</th></tr></thead><tbody><tr><td>Liquidity</td><td>40,000,000 EMPC</td><td>40%</td></tr><tr><td>Game &amp; Airdrop</td><td>25,000,000 EMPC</td><td>25%</td></tr><tr><td>Marketing</td><td>15,000,000 EMPC</td><td>15%</td></tr><tr><td>Team</td><td>10,000,000 EMPC</td><td>10%</td></tr><tr><td>Ecosystem</td><td>10,000,000 EMPC</td><td>10%</td></tr></tbody></table></div></div>
+  <div class="panel"><h2>Published allocation</h2><div class="table-wrap"><table><thead><tr><th>Allocation</th><th>Amount</th><th>Share</th></tr></thead><tbody><tr><td>Liquidity</td><td>40,000,000 EMPC</td><td>40%</td></tr><tr><td>Game &amp; Airdrop</td><td>20,000,000 EMPC</td><td>20%</td></tr><tr><td>Mining Pool</td><td>5,000,000 EMPC</td><td>5%</td></tr><tr><td>Marketing</td><td>15,000,000 EMPC</td><td>15%</td></tr><tr><td>Team</td><td>10,000,000 EMPC</td><td>10%</td></tr><tr><td>Ecosystem</td><td>10,000,000 EMPC</td><td>10%</td></tr></tbody></table></div></div>
  </section>
 
  <section id="mining" class="tab-panel hidden-panel">
@@ -83,7 +83,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
    <h2>Conditional Mining bonuses</h2>
    <p class="muted">Only verified conditions count. The combined bonus is capped at 100%, so the maximum reward remains 100 EMPC per 24-hour cycle.</p>
    <div class="table-wrap"><table><thead><tr><th>Condition</th><th>Verification method</th><th>Bonus %</th><th>Enabled</th><th>Action</th></tr></thead><tbody id="miningRulesBody"><tr><td colspan="5" class="empty">Loading bonus rules…</td></tr></tbody></table></div>
-   <p class="note" style="margin-top:14px">Telegram channel bonus remains unavailable until the official channel ID is configured for the bot. Do not enable it before the membership check is configured and tested.</p>
+   <p class="note" style="margin-top:14px">The administrator connection test confirms bot and channel access. Each staff member must also have their own Telegram identity linked and be verified as a channel member before the Telegram bonus is enabled.</p>
   </div>
  </section>
 
@@ -242,6 +242,7 @@ document.getElementById("testTelegramMining").addEventListener("click",async()=>
   if(!result.membership_checked){
    resultEl.textContent="Bot connected as @"+result.bot_username+", but membership was not checked: "+result.message;
   }else if(result.is_member){
+   document.getElementById("adminTelegramLinkStatus").textContent="Administrator Telegram link is present and the linked account is verified in the official channel.";
    resultEl.textContent="SUCCESS · Bot @"+result.bot_username+" connected; channel "+result.channel+" is reachable; linked Telegram account membership verified ("+result.membership_status+").";
   }else{
    resultEl.textContent="Bot connected and channel lookup works, but linked account is not a member ("+result.membership_status+"). Join the official channel with the Telegram account linked to this admin profile.";

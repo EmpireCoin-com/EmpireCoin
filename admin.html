@@ -109,7 +109,7 @@ async function saveTokenSettings(){
   short_description:document.getElementById("tokenDescription").value.trim(),
   updated_at:new Date().toISOString()
  };
- if(!payload.token_name||!payload.symbol||!payload.network||!payload.max_supply||Number(payload.max_supply)<=0||!Number.isInteger(payload.decimals)||payload.decimals<0||payload.decimals>18||!/^https?:\\/\\//i.test(payload.explorer_url)){
+ if(!payload.token_name||!payload.symbol||!payload.network||!payload.max_supply||Number(payload.max_supply)<=0||!Number.isInteger(payload.decimals)||payload.decimals<0||payload.decimals>18||!/^https?:\/\//i.test(payload.explorer_url)){
   msg.textContent="Please check required fields, supply, decimals, and explorer URL.";return;
  }
  if(!confirm("Save these token display settings? This will update the public website information only, not the blockchain."))return;

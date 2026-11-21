@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081426"><title>Telegram Bot Setup — EmpireCoin</title>
+<style>
+:root{--navy:#081426;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 10%,#173453 0,#081426 68%);color:var(--text);font:14px Arial,sans-serif}
+main{width:min(100%,480px);padding:28px;background:#102641;border:1px solid var(--line);box-shadow:0 20px 60px #0006}
+.brand{letter-spacing:3px;font-weight:bold;color:var(--gold2)}h1{font:normal 29px Georgia,serif;margin:24px 0 10px}p{color:var(--muted);line-height:1.65}
+button{width:100%;padding:14px;margin-top:16px;border:0;background:linear-gradient(110deg,#b99045,#efd99a);color:#152033;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}#status{margin-top:18px;overflow-wrap:anywhere;color:var(--gold2);min-height:40px}.small{font-size:11px;color:#8291a3}
+</style>
+</head>
+<body><main>
+<div class="brand">EMPIRECOIN · ADMIN</div>
+<h1>Telegram Bot Connection</h1>
+<p>This secure setup page registers the Telegram webhook using your signed-in administrator session. It does not display or request the bot token.</p>
+<p id="identity">Checking administrator session…</p>
+<button id="connect" disabled>REGISTER TELEGRAM WEBHOOK</button>
+<div id="status" role="status" aria-live="polite">Please wait…</div>
+<p class="small">Only an authenticated administrator can perform this operation. You can close this page after successful registration.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://wytdpyvzbrvzlymifpjq.supabase.co";
+const SUPABASE_KEY="sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const button=document.getElementById("connect"),status=document.getElementById("status"),identity=document.getElementById("identity");
+let accessToken=null;
+async function init(){
+ try{
+  const {data:{session},error}=await db.auth.getSession();
+  if(error)throw error;
+  if(!session){identity.textContent="No active session. Sign in to the Admin Dashboard first.";status.textContent="Administrator login required.";return;}
+  const {data:{user},error:ue}=await db.auth.getUser();
+  if(ue)throw ue;
+  if(!user||user.app_metadata?.role!=="admin"){identity.textContent="Access denied. Administrator role required.";status.textContent="This account is not an administrator.";return;}
+  accessToken=session.access_token;
+  identity.textContent="Signed in as administrator: "+(user.email||"verified admin");
+  status.textContent="Ready to register the Telegram webhook.";
+  button.disabled=false;
+ }catch(e){status.textContent="Could not verify session: "+(e.message||"Unknown error");}
+}
+button.addEventListener("click",async()=>{
+ if(!accessToken)return;
+ button.disabled=true;status.textContent="Registering webhook with Telegram…";
+ try{
+  const response=await fetch(SUPABASE_URL+"/functions/v1/empirecoin-telegram-bot/setup",{
+   method:"POST",
+   headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+accessToken,"Content-Type":"application/json"},
+   body:"{}"
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!result.ok)throw new Error(result.error||result.details||("HTTP "+response.status));
+  status.textContent="Success! Telegram webhook is registered. Return to Telegram and send /start to @EmpireCoin_Official_Bot.";
+ }catch(e){status.textContent="Setup failed: "+(e.message||"Unknown error")+". Check that TELEGRAM_BOT_TOKEN exists in Supabase Edge Function secrets.";}
+ finally{button.disabled=false;}
+});
+init();
+</script>
+</body></html>

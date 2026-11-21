@@ -76,7 +76,7 @@ async function init(){
  const select=document.createElement("select");select.id="empireLanguage";select.setAttribute("aria-label","Language");
  select.style.cssText="background:#102641;color:#f0d99c;border:1px solid #d8b66a66;padding:8px 6px;font:inherit;max-width:112px";
  [["en","English"],["ps","پښتو"],["fa","فارسی"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;select.append(o)});
- select.value=lang;select.addEventListener("change",async()=>{const chosen=select.value;const {error}=await db.from("staff_profiles").update({preferred_language:chosen}).eq("user_id",session.user.id);if(error){select.value=lang;alert("Could not save language preference: "+error.message);return}setLanguage(chosen)});
+ select.value=lang;select.addEventListener("change",async()=>{const chosen=select.value;const {error}=await db.schema("private").rpc("set_staff_preferred_language",{p_language:chosen});if(error){select.value=lang;alert("Could not save language preference: "+error.message);return}setLanguage(chosen)});
  wrap.append(select);header.append(wrap);
  observer=new MutationObserver(records=>records.forEach(r=>{if(r.type==="childList")r.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)translate(n.parentElement||document.body);else if(n.nodeType===Node.ELEMENT_NODE)translate(n)});else if(r.type==="characterData")translate(r.target.parentElement||document.body)}));
  observer.observe(document.body,{subtree:true,childList:true,characterData:true});

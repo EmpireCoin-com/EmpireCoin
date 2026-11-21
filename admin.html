@@ -66,7 +66,15 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
   </div>
   <div class="panel"><h2>Published allocation</h2><div class="table-wrap"><table><thead><tr><th>Allocation</th><th>Amount</th><th>Share</th></tr></thead><tbody><tr><td>Liquidity</td><td>40,000,000 EMPC</td><td>40%</td></tr><tr><td>Game &amp; Airdrop</td><td>25,000,000 EMPC</td><td>25%</td></tr><tr><td>Marketing</td><td>15,000,000 EMPC</td><td>15%</td></tr><tr><td>Team</td><td>10,000,000 EMPC</td><td>10%</td></tr><tr><td>Ecosystem</td><td>10,000,000 EMPC</td><td>10%</td></tr></tbody></table></div></div>
  </section>
- <section id="users" class="tab-panel hidden-panel"><div class="panel"><h2>User management</h2><p class="muted">This section is reserved for secure user administration.</p><div class="note">Not active yet. User listing, role changes, suspension, and account actions require a protected server-side admin workflow. We will not expose privileged Auth operations or secret keys in this public website.</div></div></section>
+ <section id="users" class="tab-panel hidden-panel">
+  <div class="panel">
+   <div class="section-head"><div><h2>User management</h2><p class="muted">Registered accounts from Supabase Authentication.</p></div><button id="refreshUsers">Refresh users</button></div>
+   <p id="usersMessage" class="muted" aria-live="polite">User list has not been loaded yet.</p>
+   <div class="table-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Account status</th><th>Email verified</th><th>Registered</th><th>Last sign-in</th></tr></thead><tbody id="usersBody"><tr><td colspan="6" class="empty">Open this tab or refresh to load users.</td></tr></tbody></table></div>
+   <div class="actions" style="margin-top:14px;align-items:center"><button id="usersPrev">Previous</button><span id="usersPage" class="muted">Page 1</span><button id="usersNext">Next</button></div>
+   <div class="note" style="margin-top:16px">This first version is read-only. It does not expose passwords, tokens, or secret credentials and does not change roles or suspend accounts.</div>
+  </div>
+ </section>
 </main>
 <footer>EmpireCoin Admin · Secure administrator access required</footer>
 <script>
@@ -145,6 +153,54 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{doc
 document.getElementById("newLink").addEventListener("click",()=>{clearForm();setForm(true);});
 document.getElementById("cancelLink").addEventListener("click",()=>{clearForm();setForm(false);});
 document.getElementById("saveLink").addEventListener("click",saveLink);
+
+let usersPage=1, usersHasNext=false;
+function formatDate(value){
+ if(!value)return "—";
+ const d=new Date(value);
+ return Number.isNaN(d.getTime())?"—":d.toLocaleString();
+}
+async function loadUsers(){
+ const body=document.getElementById("usersBody");
+ const msg=document.getElementById("usersMessage");
+ msg.textContent="Loading registered users…";
+ body.innerHTML='<tr><td colspan="6" class="empty">Loading…</td></tr>';
+ document.getElementById("usersPrev").disabled=usersPage<=1;
+ document.getElementById("usersNext").disabled=true;
+ try{
+  const {data:{session},error:sessionError}=await db.auth.getSession();
+  if(sessionError)throw sessionError;
+  if(!session?.access_token)throw new Error("Your administrator session has expired. Please sign in again.");
+  const endpoint=SUPABASE_URL+"/functions/v1/admin-list-users?page="+usersPage+"&perPage=25";
+  const response=await fetch(endpoint,{method:"GET",headers:{
+   "apikey":SUPABASE_KEY,
+   "Authorization":"Bearer "+session.access_token
+  }});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||("Request failed ("+response.status+")"));
+  const users=Array.isArray(result.users)?result.users:[];
+  usersHasNext=users.length===25;
+  if(!users.length){
+   body.innerHTML='<tr><td colspan="6" class="empty">No users found on this page.</td></tr>';
+  }else{
+   body.innerHTML=users.map(u=>{
+    const banned=!!(u.banned_until && new Date(u.banned_until).getTime()>Date.now());
+    return '<tr><td>'+esc(u.email||"No email")+'</td><td><span class="pill">'+esc(u.role||"user")+'</span></td><td><span class="pill '+(banned?"hidden":"visible")+'">'+(banned?"Suspended":"Active")+'</span></td><td>'+(u.email_confirmed_at?"Verified":"Not verified")+'</td><td>'+esc(formatDate(u.created_at))+'</td><td>'+esc(formatDate(u.last_sign_in_at))+'</td></tr>';
+   }).join("");
+  }
+  msg.textContent=(result.total===null||result.total===undefined?"":("Total accounts: "+result.total+" · "))+"Showing "+users.length+" account(s).";
+  document.getElementById("usersPage").textContent="Page "+usersPage;
+  document.getElementById("usersPrev").disabled=usersPage<=1;
+  document.getElementById("usersNext").disabled=!usersHasNext;
+ }catch(e){
+  body.innerHTML='<tr><td colspan="6" class="empty">'+esc(e.message||"Could not load users.")+'</td></tr>';
+  msg.textContent="User list could not be loaded.";
+ }
+}
+document.getElementById("refreshUsers").addEventListener("click",loadUsers);
+document.getElementById("usersPrev").addEventListener("click",()=>{if(usersPage>1){usersPage--;loadUsers();}});
+document.getElementById("usersNext").addEventListener("click",()=>{if(usersHasNext){usersPage++;loadUsers();}});
+
 async function start(){
  try{
   statusEl.textContent="Loading secure authentication…";
@@ -160,6 +216,7 @@ async function start(){
   logout.hidden=false;logout.addEventListener("click",async()=>{await db.auth.signOut();location.replace("login.html");});
   await loadLinks();
   await loadTokenSettings();
+  await loadUsers();
  }catch(e){statusEl.textContent="Dashboard error: "+(e.message||"Please refresh and try again.");}
 }
 start();

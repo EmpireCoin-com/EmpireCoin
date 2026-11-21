@@ -56,13 +56,38 @@ const words={
 };
 let lang="en",observer;
 const dict=()=>lang==="en"?{}:Object.fromEntries(Object.entries(words).map(([k,v])=>[k,v[lang==="ps"?0:1]]));
+const originalText=new WeakMap(),originalAttrs=new WeakMap();
 function translate(root=document.body){
  const d=dict();
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
- for(const n of nodes){const p=n.parentElement;if(!p||/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|SELECT)$/.test(p.tagName)||p.closest("[data-lang-ignore]"))continue;
- const raw=n.nodeValue,trim=raw.trim();if(d[trim])n.nodeValue=raw.replace(trim,d[trim]);}
- root.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>["placeholder","title","aria-label"].forEach(a=>{const v=el.getAttribute(a);if(v&&d[v])el.setAttribute(a,d[v])}));
+ for(const n of nodes){
+  const p=n.parentElement;
+  if(!p||/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|SELECT)$/.test(p.tagName)||p.closest("[data-lang-ignore]"))continue;
+  let state=originalText.get(n);
+  const current=n.nodeValue;
+  if(!state){state={source:current,last:null};originalText.set(n,state)}
+  else if(current!==state.last){state.source=current}
+  const trimmed=state.source.trim();
+  const translated=d[trimmed];
+  const output=translated?state.source.replace(trimmed,translated):state.source;
+  if(current!==output)n.nodeValue=output;
+  state.last=output;
+ }
+ root.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>{
+  let state=originalAttrs.get(el);
+  if(!state){state={};originalAttrs.set(el,state)}
+  ["placeholder","title","aria-label"].forEach(a=>{
+   const current=el.getAttribute(a);
+   if(current===null)return;
+   let item=state[a];
+   if(!item){item={source:current,last:null};state[a]=item}
+   else if(current!==item.last)item.source=current;
+   const output=d[item.source]||item.source;
+   if(current!==output)el.setAttribute(a,output);
+   item.last=output;
+  });
+ });
 }
 function setLanguage(next){lang=next;document.documentElement.lang=lang;document.documentElement.dir=lang==="en"?"ltr":"rtl";translate();const s=document.getElementById("empireLanguage");if(s)s.value=lang;}
 async function init(){

@@ -79,7 +79,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
   <div class="panel">
    <div class="section-head"><div><h2>Official staff management</h2><p class="muted">Review registered official staff profiles and manage their access status.</p></div><button id="refreshStaff">Refresh staff</button></div>
    <p id="staffMessage" class="muted" aria-live="polite">Loading staff profiles…</p>
-   <div class="table-wrap"><table><thead><tr><th>Staff name</th><th>User ID</th><th>Referral code</th><th>Status</th><th>Wallet verification</th><th>Fee</th><th>Actions</th></tr></thead><tbody id="staffBody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table></div>
+   <div class="panel" id="staffWalletPanel" style="margin:18px 0;display:none"><div class="section-head"><div><h2 id="walletStaffTitle">Staff wallet</h2><p class="muted" id="walletStaffMeta">Internal EMPC ledger · separate from TON blockchain assets.</p></div><button id="closeWalletPanel">Close</button></div><div class="cards" style="margin-bottom:16px"><div class="stat"><small>Current internal balance</small><strong id="selectedWalletBalance">—</strong></div><div class="stat"><small>Wallet status</small><strong id="selectedWalletStatus">—</strong></div></div><div class="form-grid"><div class="field"><label for="walletDirection">Operation</label><select id="walletDirection"><option value="credit">Credit EMPC</option><option value="debit">Debit EMPC</option></select></div><div class="field"><label for="walletAmount">Amount (EMPC)</label><input id="walletAmount" type="number" min="0.000000001" max="100000000" step="0.000000001" placeholder="e.g. 100"></div><div class="field"><label for="walletDescription">Reason / description</label><input id="walletDescription" maxlength="240" placeholder="Reason for this adjustment"></div></div><div class="actions" style="margin:14px 0"><button id="applyWalletChange" class="primary">Review wallet change</button></div><p id="walletActionMessage" class="muted" aria-live="polite"></p><h3 style="margin-top:20px">Recent wallet transactions</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance after</th><th>Description</th></tr></thead><tbody id="staffWalletHistory"><tr><td colspan="5" class="empty">Select a staff wallet to view transactions.</td></tr></tbody></table></div><div class="note" style="margin-top:14px">This is the private internal EMPC ledger. It does not send tokens on TON. All changes are processed by the protected server function and recorded in transaction history.</div></div><div class="table-wrap"><table><thead><tr><th>Staff name</th><th>User ID</th><th>Referral code</th><th>Status</th><th>Wallet verification</th><th>Fee</th><th>Internal EMPC balance</th><th>Actions</th></tr></thead><tbody id="staffBody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody></table></div>
    <div class="note" style="margin-top:16px">Security: Telegram sign-in alone does not grant staff privileges. Staff activation and the 100 EMPC referral reward must only occur after server-verified TON wallet ownership and the required 0.5 TON fee payment. Do not activate staff manually from this screen.</div>
   </div>
  </section>
@@ -233,46 +233,98 @@ document.getElementById("refreshUsers").addEventListener("click",loadUsers);
 document.getElementById("usersPrev").addEventListener("click",()=>{if(usersPage>1){usersPage--;loadUsers();}});
 document.getElementById("usersNext").addEventListener("click",()=>{if(usersHasNext){usersPage++;loadUsers();}});
 
+let staffWalletsByUser={}, selectedStaffWallet=null;
+async function getAdminSession(){
+ const {data:{session},error}=await db.auth.getSession();
+ if(error)throw error;
+ if(!session?.access_token)throw new Error("Administrator session expired. Sign in again.");
+ return session;
+}
+async function restGet(path,session){
+ const response=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+session.access_token,"Accept":"application/json"}});
+ const raw=await response.text();let data;
+ try{data=raw?JSON.parse(raw):[];}catch{throw new Error("Unreadable Supabase response (HTTP "+response.status+").");}
+ if(!response.ok)throw new Error(data.message||data.error||raw||("HTTP "+response.status));
+ return data;
+}
 async function loadStaff(){
  const body=document.getElementById("staffBody"),msg=document.getElementById("staffMessage");
  msg.textContent="Loading official staff profiles…";
- body.innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
+ body.innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
  try{
-  const {data:{session},error:sessionError}=await db.auth.getSession();
-  if(sessionError)throw sessionError;
-  if(!session?.access_token)throw new Error("Administrator session expired. Sign in again.");
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),15000);
-  let response;
-  try{
-   response=await fetch(SUPABASE_URL+"/rest/v1/staff_profiles?select=user_id,display_name,referral_code,referred_by,status,ton_wallet_address,wallet_verified_at,verification_fee_status,created_at&order=created_at.desc",{
-    method:"GET",
-    headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+session.access_token,"Accept":"application/json"},
-    signal:controller.signal
-   });
-  }finally{clearTimeout(timeout);}
-  const raw=await response.text();
-  let data;
-  try{data=raw?JSON.parse(raw):[];}catch{throw new Error("Supabase returned an unreadable response (HTTP "+response.status+").");}
-  if(!response.ok)throw new Error((data.message||data.error||raw||"Request failed")+" (HTTP "+response.status+")");
+  const session=await getAdminSession();
+  const data=await restGet("staff_profiles?select=user_id,display_name,referral_code,referred_by,status,ton_wallet_address,wallet_verified_at,verification_fee_status,created_at&order=created_at.desc",session);
   if(!Array.isArray(data))throw new Error("Unexpected response from staff_profiles API.");
-  if(!data.length){body.innerHTML='<tr><td colspan="7" class="empty">No official staff profiles found.</td></tr>';msg.textContent="0 staff profiles.";return;}
+  const wallets=await restGet("staff_wallets?select=id,user_id,balance,currency,wallet_status",session);
+  staffWalletsByUser={};wallets.forEach(w=>staffWalletsByUser[w.user_id]=w);
+  if(!data.length){body.innerHTML='<tr><td colspan="8" class="empty">No official staff profiles found.</td></tr>';msg.textContent="0 staff profiles.";return;}
   body.innerHTML=data.map(x=>{
    const verified=x.wallet_verified_at&&x.ton_wallet_address;
-   const wallet=verified?"Verified · "+esc(x.ton_wallet_address):"Not verified";
-   const actions=x.status==="active"
+   const walletText=verified?"Verified · "+esc(x.ton_wallet_address):"Not verified";
+   const iw=staffWalletsByUser[x.user_id];
+   const balance=iw?Number(iw.balance).toFixed(9)+" EMPC":"Wallet not created";
+   const actions='<button data-open-wallet="'+esc(x.user_id)+'">Manage wallet</button> '+(x.status==="active"
     ?'<button class="danger" data-staff-action="suspend" data-staff-id="'+esc(x.user_id)+'">Suspend</button>'
-    :'<button data-staff-action="restore" data-staff-id="'+esc(x.user_id)+'">Restore to invited</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>';
-   return '<tr><td>'+esc(x.display_name)+'</td><td><small>'+esc(x.user_id)+'</small></td><td>'+esc(x.referral_code)+'</td><td><span class="pill '+(x.status==="active"?"visible":(x.status==="suspended"||x.status==="rejected"?"hidden":""))+'">'+esc(x.status)+'</span></td><td>'+wallet+'</td><td>'+esc(x.verification_fee_status)+'</td><td><div class="actions">'+actions+'</div></td></tr>';
+    :'<button data-staff-action="restore" data-staff-id="'+esc(x.user_id)+'">Restore to invited</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>');
+   return '<tr><td>'+esc(x.display_name)+'</td><td><small>'+esc(x.user_id)+'</small></td><td>'+esc(x.referral_code)+'</td><td><span class="pill '+(x.status==="active"?"visible":(x.status==="suspended"||x.status==="rejected"?"hidden":""))+'">'+esc(x.status)+'</span></td><td>'+walletText+'</td><td>'+esc(x.verification_fee_status)+'</td><td>'+esc(balance)+'</td><td><div class="actions">'+actions+'</div></td></tr>';
   }).join("");
   body.querySelectorAll("[data-staff-action]").forEach(b=>b.addEventListener("click",()=>changeStaffStatus(b.dataset.staffId,b.dataset.staffAction)));
+  body.querySelectorAll("[data-open-wallet]").forEach(b=>b.addEventListener("click",()=>openStaffWallet(b.dataset.openWallet,data.find(x=>x.user_id===b.dataset.openWallet))));
   msg.textContent="Showing "+data.length+" official staff profile(s).";
  }catch(e){
-  const reason=e.name==="AbortError"?"Supabase request timed out after 15 seconds. Check the Data API connection and try again.":(e.message||"Could not load staff profiles.");
-  body.innerHTML='<tr><td colspan="7" class="empty">'+esc(reason)+'</td></tr>';
+  const reason=e.name==="AbortError"?"Supabase request timed out. Check the Data API connection and try again.":(e.message||"Could not load staff profiles.");
+  body.innerHTML='<tr><td colspan="8" class="empty">'+esc(reason)+'</td></tr>';
   msg.textContent="Staff profiles could not be loaded: "+reason;
  }
 }
+async function openStaffWallet(userId,staff){
+ const panel=document.getElementById("staffWalletPanel"),msg=document.getElementById("walletActionMessage");
+ selectedStaffWallet=staffWalletsByUser[userId]||null;
+ document.getElementById("walletStaffTitle").textContent=(staff?.display_name||"Staff")+" · Internal EMPC Wallet";
+ document.getElementById("walletStaffMeta").textContent="Staff ID: "+userId+" · Internal ledger only; not TON blockchain assets.";
+ panel.style.display="block";msg.textContent="";
+ document.getElementById("selectedWalletBalance").textContent=selectedStaffWallet?Number(selectedStaffWallet.balance).toFixed(9)+" EMPC":"Not created";
+ document.getElementById("selectedWalletStatus").textContent=selectedStaffWallet?.wallet_status||"Unavailable";
+ document.getElementById("staffWalletHistory").innerHTML='<tr><td colspan="5" class="empty">Loading transactions…</td></tr>';
+ panel.scrollIntoView({behavior:"smooth",block:"start"});
+ if(!selectedStaffWallet){document.getElementById("staffWalletHistory").innerHTML='<tr><td colspan="5" class="empty">No internal wallet exists for this staff member.</td></tr>';return;}
+ try{
+  const session=await getAdminSession();
+  const rows=await restGet("staff_wallet_transactions?select=id,transaction_type,amount,balance_after,description,created_at&wallet_id=eq."+encodeURIComponent(selectedStaffWallet.id)+"&order=created_at.desc&limit=25",session);
+  const history=document.getElementById("staffWalletHistory");
+  if(!rows.length){history.innerHTML='<tr><td colspan="5" class="empty">No transactions recorded yet.</td></tr>';return;}
+  history.innerHTML=rows.map(t=>'<tr><td>'+esc(formatDate(t.created_at))+'</td><td>'+esc(t.transaction_type)+'</td><td>'+Number(t.amount).toFixed(9)+' EMPC</td><td>'+Number(t.balance_after).toFixed(9)+' EMPC</td><td>'+esc(t.description)+'</td></tr>').join("");
+ }catch(e){document.getElementById("staffWalletHistory").innerHTML='<tr><td colspan="5" class="empty">'+esc(e.message||"Could not load history.")+'</td></tr>';}
+}
+async function applyStaffWalletChange(){
+ const msg=document.getElementById("walletActionMessage");
+ if(!selectedStaffWallet){msg.textContent="This staff member has no internal wallet.";return;}
+ const direction=document.getElementById("walletDirection").value;
+ const amount=Number(document.getElementById("walletAmount").value);
+ const description=document.getElementById("walletDescription").value.trim();
+ if(!Number.isFinite(amount)||amount<=0||amount>100000000||!/^\d+(\.\d{1,9})?$/.test(document.getElementById("walletAmount").value.trim())||!description){msg.textContent="Enter a valid amount (up to 9 decimals) and a reason.";return;}
+ const staffName=document.getElementById("walletStaffTitle").textContent;
+ const verb=direction==="credit"?"ADD":"DEDUCT";
+ if(!confirm("Confirm "+verb+" "+amount+" EMPC "+(direction==="credit"?"to":"from")+" "+staffName+"?\n\nReason: "+description+"\n\nThis action will change the internal ledger and cannot be silently reversed."))return;
+ msg.textContent="Processing secure wallet operation…";
+ try{
+  const session=await getAdminSession();
+  const response=await fetch(SUPABASE_URL+"/functions/v1/admin-manage-staff-wallet",{
+   method:"POST",
+   headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+session.access_token,"Content-Type":"application/json"},
+   body:JSON.stringify({userId:selectedStaffWallet.user_id,direction,amount,description,idempotencyKey:crypto.randomUUID()})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||result.message||("Request failed (HTTP "+response.status+")"));
+  msg.textContent="Wallet updated successfully. New balance: "+Number(result.balance??result.wallet?.balance??result.data?.balance??NaN).toFixed(9)+" EMPC. Refreshing…";
+  document.getElementById("walletAmount").value="";document.getElementById("walletDescription").value="";
+  await loadStaff();
+  await openStaffWallet(selectedStaffWallet.user_id,{display_name:staffName.split(" · ")[0]});
+  msg.textContent="Wallet operation completed. Transaction history refreshed.";
+ }catch(e){msg.textContent="Wallet operation failed: "+(e.message||"Unknown error");}
+}
+document.getElementById("closeWalletPanel").addEventListener("click",()=>{document.getElementById("staffWalletPanel").style.display="none";selectedStaffWallet=null;});
+document.getElementById("applyWalletChange").addEventListener("click",applyStaffWalletChange);
 async function changeStaffStatus(userId,action){
  const next=action==="suspend"?"suspended":action==="reject"?"rejected":"invited";
  const label=action==="suspend"?"suspend":action==="reject"?"reject":"restore to invited";

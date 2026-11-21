@@ -4,81 +4,218 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#081426">
-<title>Staff Profile — EmpireCoin</title>
+<title>My Staff Profile — EmpireCoin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:86px;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif}
-header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
-.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}button{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
-.staff-hub-link{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:15px 17px;border:1px solid var(--gold);background:linear-gradient(110deg,#1b3550,#10243a);color:var(--gold2);text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.3px}.staff-hub-link span{display:block;color:var(--muted);font-size:11px;font-weight:400;letter-spacing:0;margin-top:4px}.staff-hub-link .arrow{font-size:22px;color:var(--gold2)}
-main{width:min(100% - 28px,680px);margin:30px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
-.profile-card{margin-top:24px;padding:24px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);text-align:center}
-.avatar{width:104px;height:104px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:none;margin:0 auto 16px;background:var(--panel)}
-.avatar-fallback{width:104px;height:104px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 16px;color:var(--gold2);font-size:38px;background:var(--panel)}
-.name{font-size:23px;font-weight:700;overflow-wrap:anywhere}.username{color:var(--muted);font-size:13px;margin-top:6px}
-.status{display:inline-block;margin-top:14px;padding:7px 12px;border:1px solid var(--line);color:var(--gold2);font-size:11px;letter-spacing:1px}
-.details{display:grid;gap:0;margin-top:18px;text-align:left;border-top:1px solid var(--line)}
-.detail{padding:16px 2px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;font-size:13px}
-.detail span:first-child{color:var(--muted)}.detail strong{text-align:right;overflow-wrap:anywhere}
-#message{padding:13px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:16px;overflow-wrap:anywhere}
-.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}
-.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}
-@media(max-width:480px){main{margin:24px auto}.profile-card{padding:20px 16px}.detail{font-size:12px}}
+:root{--navy:#081426;--panel:#102641;--panel2:#132d49;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38;--green:#8fd1ad}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;padding-bottom:88px}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}.signout{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
+main{width:min(100% - 28px,900px);margin:24px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}
+h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}.card{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);padding:18px;min-width:0}.wide{grid-column:1/-1}.label{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}.value{font-size:20px;font-weight:700;margin-top:9px;overflow-wrap:anywhere}.status{display:inline-block;padding:6px 10px;border:1px solid var(--line);color:var(--gold2);font-size:11px;margin-top:10px}.code{font:700 23px "DM Sans",sans-serif;letter-spacing:1.2px;color:var(--gold2);margin:10px 0;overflow-wrap:anywhere}.copy{background:linear-gradient(110deg,#b99045,#efd99a);border:0;color:#152033;font-weight:700;padding:11px 15px;cursor:pointer}.note{font-size:11px;color:var(--muted);margin-top:12px}.walletbox{border:1px dashed var(--line);padding:14px;margin-top:12px;color:var(--muted);font-size:12px;line-height:1.6}.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}#message{padding:12px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:14px;overflow-wrap:anywhere}
+.avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:none;margin-bottom:12px;background:var(--panel2)}.hidden{display:none!important}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.card{padding:16px}.value{font-size:18px}.code{font-size:21px}}
 </style>
 </head>
 <body>
-<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button id="signout">SIGN OUT</button></header>
+<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button class="signout" id="signout">SIGN OUT</button></header>
 <main>
 <div class="eyebrow">OFFICIAL STAFF PORTAL</div>
-<h1>My Profile</h1>
-<p>Your personal staff information and verified Telegram identity.</p>
-<a class="staff-hub-link" href="staff-dashboard.html"><div>STAFF DASHBOARD<span>Open staff portal · TON wallet connection and staff tools</span></div><div class="arrow" aria-hidden="true">›</div></a>
-<div id="message" role="status" aria-live="polite">Verifying your secure account…</div>
-<section class="profile-card" id="profileCard" hidden>
-<img id="avatar" class="avatar" alt="Telegram profile photo">
-<div id="avatarFallback" class="avatar-fallback" aria-hidden="true">♙</div>
-<div class="name" id="name">—</div>
-<div class="username" id="username"></div>
-<div class="status" id="status">—</div>
-<div class="details">
-<div class="detail"><span>Staff account</span><strong>Official staff</strong></div>
-<div class="detail"><span>Registration date</span><strong id="created">—</strong></div>
-<div class="detail"><span>Telegram ID</span><strong id="telegramId">—</strong></div>
-</div>
+<h1>My Staff Profile</h1>
+<p id="welcome">Your official staff identity, referral details, internal EMPC balance and TON wallet in one place.</p>
+<div id="message" role="status" aria-live="polite">Verifying your account…</div>
+<section class="grid hidden" id="dashboard">
+<div class="card" id="profile"><img id="avatar" class="avatar" alt="Telegram profile photo"><div class="label">Staff name</div><div class="value" id="name">—</div><div class="note" id="telegramUsername"></div><div class="note" id="telegramId"></div><div class="status" id="status">—</div></div>
+<div class="card"><div class="label">Staff registration</div><div class="value" id="created">—</div><div class="note">Your official staff profile record.</div></div>
+<div class="card wide"><div class="label">Your personal referral code</div><div class="code" id="referral">—</div><button class="copy" id="copy">COPY REFERRAL CODE</button><div class="note">Share this code with a person you invite to official EmpireCoin staff registration. Referral rewards are issued only after wallet ownership and the company fee are verified.</div></div>
+<div class="card wide" id="wallet"><div class="label">Internal EMPC wallet</div><div class="value" id="internalBalance">Loading balance…</div><div class="status" id="internalWalletStatus">Checking wallet</div><div class="walletbox">This is your private EmpireCoin site balance. It is separate from EMPC held in a TON blockchain wallet. Only verified server-side operations can change this balance.</div><div class="label" style="margin-top:18px">Recent transactions</div><div id="walletTransactions" class="note">Loading transaction history…</div></div>
+<div class="card wide"><div class="label">TON blockchain wallet</div><div id="ton-connect"></div><div class="value" id="tonWalletAddress">Not connected</div><div class="status" id="tonWalletStatus">Wallet ownership not verified</div><button class="copy" id="verifyTonOwnership" type="button" style="margin-top:14px">PREPARE OWNERSHIP VERIFICATION</button><div class="note" id="tonProofHelp">Connect your wallet, then tap Verify Ownership. Your wallet will ask you to sign a TON Proof challenge; no transaction or fee is involved.</div><div class="walletbox">Only a valid server-checked TON Proof signature can confirm wallet ownership. EmpireCoin currently accepts TON Testnet only. Verification does not activate staff status or mark the 0.5 TON company fee as paid. Never enter or share a seed phrase or private key.</div></div>
+<div class="card wide"><div class="label">Verification & activation</div><div class="value" id="fee">Unpaid</div><p>Wallet verification and any fee process are not active yet. EMPC currently operates on TON Testnet; no real 0.5 TON payment will be requested at this stage.</p></div>
 </section>
 </main>
 <nav class="nav" aria-label="Staff navigation">
-<a href="index.html"><b>⌂</b>Home</a>
-<a href="staff-profile.html" class="active" aria-current="page"><b>♙</b>Profile</a>
-<a href="staff-wallet.html"><b>◈</b>Wallet</a>
-<a href="staff-tasks.html"><b>✓</b>Tasks</a>
-<a href="staff-dashboard.html"><b>♜</b>Staff</a>
+<a href="index.html"><b>⌂</b>Home</a><a href="staff-profile.html" class="active" aria-current="page"><b>♙</b>Profile</a><a href="staff-wallet.html"><b>◈</b>Wallet</a><a href="staff-tasks.html"><b>✓</b>Tasks</a>
 </nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@tonconnect/ui@5.0.3/dist/tonconnect-ui.min.js"></script>
 <script>
 const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
-const $=id=>document.getElementById(id);
-function say(message){$("message").textContent=message}
+const $=id=>document.getElementById(id);let referralCode="";let currentSession=null;let tonConnectUI=null;let proofInFlight=false;let proofChallengeReady=false;
+function say(t){$("message").textContent=t}
+async function loadInternalWallet(userId){
+ const balanceEl=$("internalBalance"),statusEl=$("internalWalletStatus"),historyEl=$("walletTransactions");
+ const {data:wallet,error:walletError}=await db.from("staff_wallets").select("id,balance,currency,wallet_status").eq("user_id",userId).maybeSingle();
+ if(walletError){balanceEl.textContent="Unavailable";statusEl.textContent="Wallet could not be loaded";historyEl.textContent=walletError.message;return}
+ if(!wallet){balanceEl.textContent="Wallet not created";statusEl.textContent="Contact administrator";historyEl.textContent="No internal wallet is linked to this staff profile.";return}
+ balanceEl.textContent=Number(wallet.balance).toFixed(9)+" "+wallet.currency;
+ statusEl.textContent=wallet.wallet_status.replaceAll("_"," ").toUpperCase();
+ const {data:items,error:historyError}=await db.from("staff_wallet_transactions").select("id,transaction_type,amount,balance_after,description,created_at").eq("wallet_id",wallet.id).order("created_at",{ascending:false}).limit(15);
+ if(historyError){historyEl.textContent="Could not load transactions: "+historyError.message;return}
+ historyEl.replaceChildren();
+ if(!items||items.length===0){historyEl.textContent="No transactions yet.";return}
+ const list=document.createElement("div");
+ list.style.display="grid";list.style.gap="10px";
+ items.forEach(item=>{
+  const row=document.createElement("div");
+  row.style.padding="10px 0";row.style.borderBottom="1px solid #d8b66a38";
+  const heading=document.createElement("div");
+  heading.style.display="flex";heading.style.justifyContent="space-between";heading.style.gap="10px";
+  const kind=document.createElement("strong");kind.textContent=item.transaction_type.replaceAll("_"," ").toUpperCase();
+  const amount=document.createElement("strong");amount.textContent=Number(item.amount).toFixed(9)+" EMPC";
+  heading.append(kind,amount);
+  const detail=document.createElement("div");detail.textContent=item.description+" · Balance after: "+Number(item.balance_after).toFixed(9)+" EMPC";detail.style.marginTop="5px";
+  const date=document.createElement("div");date.textContent=new Date(item.created_at).toLocaleString();date.style.marginTop="4px";date.style.fontSize="10px";
+  row.append(heading,detail,date);list.append(row);
+ });
+ historyEl.append(list);
+}
+function tonProofApi(action,data={}){
+ if(!currentSession?.access_token)throw new Error("Your staff session expired. Please sign in again.");
+ return fetch("https://wytdpyvzbrvzlymifpjq.supabase.co/functions/v1/staff-ton-proof",{
+  method:"POST",
+  headers:{
+   "Authorization":"Bearer "+currentSession.access_token,
+   "apikey":"sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk",
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({action,...data})
+ }).then(async response=>{
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||"TON ownership verification failed.");
+  return result;
+ });
+}
+async function submitTonProof(wallet,proof){
+ if(proofInFlight)return;
+ proofInFlight=true;
+ $("verifyTonOwnership").disabled=true;
+ $("verifyTonOwnership").textContent="VERIFYING…";
+ $("tonWalletStatus").textContent="Checking TON Proof signature securely…";
+ try{
+  const result=await tonProofApi("verify",{
+   address:wallet.account.address,
+   network:wallet.account.chain,
+   public_key:wallet.account.publicKey,
+   proof:{...proof,state_init:wallet.account.walletStateInit}
+  });
+  $("tonWalletAddress").textContent=result.address;
+  $("tonWalletStatus").textContent="Ownership verified · TON Testnet";
+  $("status").textContent=(result.status||"pending_payment").replaceAll("_"," ").toUpperCase();
+  $("fee").textContent=(result.verification_fee_status||"unpaid").replaceAll("_"," ").toUpperCase();
+  $("tonProofHelp").textContent="Your wallet ownership has been verified by the EmpireCoin server. The company fee is still unpaid; your staff account is not active yet.";
+  say("TON wallet ownership verified successfully. Your staff status is Pending Payment; no 0.5 TON fee has been charged.");
+ }catch(error){
+  $("tonWalletStatus").textContent="Ownership verification failed";
+  $("tonProofHelp").textContent=error.message+" If needed, tap Verify Ownership to request a fresh challenge.";
+  say(error.message);
+ }finally{
+  proofInFlight=false;
+  proofChallengeReady=false;
+  try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
+  $("verifyTonOwnership").disabled=false;
+  $("verifyTonOwnership").textContent="PREPARE OWNERSHIP VERIFICATION";
+ }
+}
+function initTonConnect(){
+ const addressEl=$("tonWalletAddress"),statusEl=$("tonWalletStatus");
+ if(!window.TON_CONNECT_UI||!window.TON_CONNECT_UI.TonConnectUI){
+  statusEl.textContent="TON Connect could not load. Refresh the page and try again.";
+  return;
+ }
+ try{
+  tonConnectUI=new window.TON_CONNECT_UI.TonConnectUI({
+   manifestUrl:"https://empirecoin-com.github.io/EmpireCoin/tonconnect-manifest.json",
+   buttonRootId:"ton-connect"
+  });
+  tonConnectUI.onStatusChange(wallet=>{
+   if(!wallet){
+    addressEl.textContent="Not connected";
+    if(!proofInFlight)statusEl.textContent="Wallet ownership not verified";
+    return;
+   }
+   const raw=wallet.account.address||"";
+   let shown=raw;
+   try{if(window.TON_CONNECT_UI.toUserFriendlyAddress)shown=window.TON_CONNECT_UI.toUserFriendlyAddress(raw,true);}catch(_){}
+   addressEl.textContent=shown;
+   const network=wallet.account.chain==="-3"?"TON Testnet":wallet.account.chain==="-239"?"TON Mainnet":"TON network "+wallet.account.chain;
+   if(!proofInFlight)statusEl.textContent="Connected · "+network+" · Ownership verification pending";
+   const item=wallet.connectItems&&wallet.connectItems.tonProof;
+   if(item&&item.proof)void submitTonProof(wallet,item.proof);
+   else if(item&&item.error){
+    $("tonProofHelp").textContent="This wallet did not provide TON Proof support. Try updating Tonkeeper or another supported TON wallet.";
+    proofChallengeReady=false;
+    try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
+   }else if(proofChallengeReady){
+    $("tonProofHelp").textContent="Wallet reconnected, but it did not return a TON Proof signature. Please disconnect and try again with an updated Tonkeeper version.";
+    proofChallengeReady=false;
+    try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
+   }
+  });
+ }catch(error){
+  statusEl.textContent="Could not initialize TON Connect. Please refresh and try again.";
+  console.error("TON Connect initialization failed",error);
+ }
+}
+async function startTonOwnershipVerification(){
+ if(!tonConnectUI){say("TON Connect is not ready. Refresh the page and try again.");return}
+ if(proofChallengeReady){
+  $("tonProofHelp").textContent="A verification request is already prepared. Please tap CONNECT WALLET above to reconnect and sign it.";
+  say("Your secure request is ready. Tap Connect Wallet to continue.");
+  return;
+ }
+ try{
+  $("verifyTonOwnership").disabled=true;
+  $("verifyTonOwnership").textContent="PREPARING…";
+  $("tonProofHelp").textContent="Preparing a secure, single-use verification challenge…";
+  // Create the challenge first. If this fails, the current wallet connection remains untouched.
+  const challenge=await tonProofApi("challenge");
+  tonConnectUI.setConnectRequestParameters({state:"ready",value:{tonProof:challenge.payload}});
+  proofChallengeReady=true;
+  if(tonConnectUI.connected){
+   // TON Proof is returned during a fresh connect request. Disconnect only after the challenge is ready.
+   await tonConnectUI.disconnect();
+  }
+  $("tonWalletStatus").textContent="Verification request ready · Wallet disconnected for secure reconnection";
+  $("tonProofHelp").textContent="Step 1 complete. Now tap the CONNECT WALLET button above and choose Tonkeeper. Tonkeeper should show a TON Proof signature request. Approve the signature (no transaction or fee).";
+  say("Secure request prepared. Tap Connect Wallet above to reconnect and sign.");
+ }catch(error){
+  $("tonProofHelp").textContent=error.message+" Your wallet connection was not intentionally changed if challenge preparation failed.";
+  say(error.message);
+ }finally{
+  $("verifyTonOwnership").disabled=false;
+  $("verifyTonOwnership").textContent="PREPARE OWNERSHIP VERIFICATION";
+ }
+}
+$("verifyTonOwnership").addEventListener("click",startTonOwnershipVerification);
 async function init(){
  const {data:{session},error:sessionError}=await db.auth.getSession();
  if(sessionError||!session){location.replace("staff-login.html");return}
- const {data:profile,error}=await db.from("staff_profiles").select("display_name,status,created_at").eq("user_id",session.user.id).maybeSingle();
+ currentSession=session;
+ const {data:profile,error}=await db.from("staff_profiles").select("display_name,referral_code,status,created_at,verification_fee_status,ton_wallet_address,wallet_verified_at").eq("user_id",session.user.id).maybeSingle();
  if(error){say("Could not load your staff profile: "+error.message);return}
- if(!profile){say("Telegram identity verified, but this account has no official staff profile. Contact the administrator for an invitation.");return}
- const meta=session.user.user_metadata||{};
- const username=meta.preferred_username||meta.username||"";
- $("name").textContent=profile.display_name||meta.name||"Staff member";
- $("username").textContent=username?"@"+username:"Telegram username unavailable";
- $("status").textContent=(profile.status||"unknown").replaceAll("_"," ").toUpperCase();
- $("created").textContent=profile.created_at?new Date(profile.created_at).toLocaleDateString():"—";
- $("telegramId").textContent=session.user.identities?.find(x=>x.provider==="custom:telegram")?.identity_data?.id||meta.id||"Verified";
- const photo=meta.picture||meta.photo_url||meta.avatar_url||"";
- if(photo){try{const parsed=new URL(photo);if(parsed.protocol==="https:"){$("avatar").src=parsed.href;$("avatar").style.display="block";$("avatarFallback").style.display="none"}}catch(_){}}
- $("profileCard").hidden=false;
- say(profile.status==="active"?"Your official staff profile is active.":"Your profile is registered. Current status: "+profile.status.replaceAll("_"," ")+".");
+ if(!profile){say("Telegram identity verified, but no official staff profile is linked to this account. Contact the administrator for an invitation.");return}
+ referralCode=profile.referral_code;
+ $("welcome").textContent="Welcome, "+profile.display_name+". This dashboard shows only your own staff information.";
+ $("name").textContent=profile.display_name;
+ const tgMeta=session.user.user_metadata||{};
+ const telegramUsername=tgMeta.preferred_username||tgMeta.username||"";
+ $("telegramUsername").textContent=telegramUsername?"@"+telegramUsername:"";
+ const telegramId=session.user.identities?.find(x=>x.provider==="custom:telegram")?.identity_data?.id||tgMeta.id||"";
+ $("telegramId").textContent=telegramId?"Telegram ID: "+telegramId:"";
+ const photo=tgMeta.picture||tgMeta.photo_url||tgMeta.avatar_url||"";
+ if(photo){try{const parsed=new URL(photo);if(parsed.protocol==="https:"){const avatar=$("avatar");avatar.src=parsed.href;avatar.style.display="block";}}catch(_){}}
+ $("status").textContent=profile.status.replaceAll("_"," ").toUpperCase();
+ $("created").textContent=new Date(profile.created_at).toLocaleDateString();
+ $("referral").textContent=profile.referral_code;
+ $("fee").textContent=profile.verification_fee_status.replaceAll("_"," ").toUpperCase();
+ $("dashboard").classList.remove("hidden");
+ await loadInternalWallet(session.user.id);
+ say(profile.status==="active"?"Your staff account is active.":"Your staff profile is registered but not active yet. Complete the required verification steps when they become available.");
 }
+$("copy").addEventListener("click",async()=>{if(!referralCode)return;try{await navigator.clipboard.writeText(referralCode);$("copy").textContent="COPIED";setTimeout(()=>$("copy").textContent="COPY REFERRAL CODE",1800)}catch(e){say("Copy is unavailable in this browser. Your referral code is "+referralCode)}});
 $("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+initTonConnect();
 init();
 </script>
 

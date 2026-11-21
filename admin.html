@@ -70,7 +70,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
   <div class="panel">
    <div class="section-head"><div><h2>User management</h2><p class="muted">Registered accounts from Supabase Authentication.</p></div><button id="refreshUsers">Refresh users</button></div>
    <p id="usersMessage" class="muted" aria-live="polite">User list has not been loaded yet.</p>
-   <div class="table-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Account status</th><th>Email verified</th><th>Registered</th><th>Last sign-in</th><th>Account action</th></tr></thead><tbody id="usersBody"><tr><td colspan="7" class="empty">Open this tab or refresh to load users.</td></tr></tbody></table></div>
+   <div class="table-wrap"><table><thead><tr><th>Name / Telegram username</th><th>Role</th><th>Account status</th><th>Email verified</th><th>Registered</th><th>Last sign-in</th><th>Account action</th></tr></thead><tbody id="usersBody"><tr><td colspan="7" class="empty">Open this tab or refresh to load users.</td></tr></tbody></table></div>
    <div class="actions" style="margin-top:14px;align-items:center"><button id="usersPrev">Previous</button><span id="usersPage" class="muted">Page 1</span><button id="usersNext">Next</button></div>
    <div class="note" style="margin-top:16px">Admins can suspend or reactivate regular user accounts. Admin accounts are protected. No passwords, tokens, or secret credentials are displayed.</div>
   </div>
@@ -195,7 +195,9 @@ async function loadUsers(){
     const banned=!!(u.banned_until && new Date(u.banned_until).getTime()>Date.now());
     const isAdmin=(u.role||"user")==="admin";
     const action=isAdmin?'<span class="muted">Protected admin</span>':'<button class="'+(banned?"primary":"danger")+'" data-user-action="'+esc(u.id)+'" data-action="'+(banned?"activate":"suspend")+'" '+(u.id===session.user.id?"disabled":"")+'>'+(banned?"Activate":"Suspend")+"</button>";
-    return '<tr><td>'+esc(u.email||"No email")+'</td><td><span class="pill">'+esc(u.role||"user")+'</span></td><td><span class="pill '+(banned?"hidden":"visible")+'">'+(banned?"Suspended":"Active")+'</span></td><td>'+(u.email_confirmed_at?"Verified":"Not verified")+'</td><td>'+esc(formatDate(u.created_at))+'</td><td>'+esc(formatDate(u.last_sign_in_at))+'</td><td>'+action+'</td></tr>';
+    const accountName=u.display_name||u.username||u.email||"Unnamed account";
+    const accountHandle=u.username?"@"+u.username:"";
+    return '<tr><td><strong>'+esc(accountName)+'</strong>'+(accountHandle?'<br><small>'+esc(accountHandle)+'</small>':(u.email?'<br><small>'+esc(u.email)+'</small>':''))+'</td><td><span class="pill">'+esc(u.role||"user")+'</span></td><td><span class="pill '+(banned?"hidden":"visible")+'">'+(banned?"Suspended":"Active")+'</span></td><td>'+(u.email_confirmed_at?"Verified":"Not applicable")+'</td><td>'+esc(formatDate(u.created_at))+'</td><td>'+esc(formatDate(u.last_sign_in_at))+'</td><td>'+action+'</td></tr>';
    }).join("");
   }
   body.querySelectorAll("[data-user-action]").forEach(button=>button.addEventListener("click",()=>changeUserStatus(button.dataset.userAction,button.dataset.action)));

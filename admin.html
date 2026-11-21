@@ -157,7 +157,7 @@ async function saveLink(){
 }
 async function toggleLink(x){const {error}=await db.from("social_links").update({is_visible:!x.is_visible,updated_at:new Date().toISOString()}).eq("id",x.id);if(error){statusEl.textContent="Update failed: "+error.message;return;}await loadLinks();statusEl.textContent="Visibility updated.";}
 async function deleteLink(x){if(!confirm("Delete the social link “"+x.label+"”? This cannot be undone."))return;const {error}=await db.from("social_links").delete().eq("id",x.id);if(error){statusEl.textContent="Delete failed: "+error.message;return;}await loadLinks();statusEl.textContent="Social link deleted.";}
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab-panel").forEach(x=>x.classList.toggle("hidden-panel",x.id!==b.dataset.tab));}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab-panel").forEach(x=>x.classList.toggle("hidden-panel",x.id!==b.dataset.tab));if(b.dataset.tab==="staff")loadStaff();}));
 document.getElementById("newLink").addEventListener("click",()=>{clearForm();setForm(true);});
 document.getElementById("cancelLink").addEventListener("click",()=>{clearForm();setForm(false);});
 document.getElementById("saveLink").addEventListener("click",saveLink);

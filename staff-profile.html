@@ -16,6 +16,20 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}.card{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);padding:18px;min-width:0}.wide{grid-column:1/-1}.label{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}.value{font-size:20px;font-weight:700;margin-top:9px;overflow-wrap:anywhere}.status{display:inline-block;padding:6px 10px;border:1px solid var(--line);color:var(--gold2);font-size:11px;margin-top:10px}.code{font:700 23px "DM Sans",sans-serif;letter-spacing:1.2px;color:var(--gold2);margin:10px 0;overflow-wrap:anywhere}.copy{background:linear-gradient(110deg,#b99045,#efd99a);border:0;color:#152033;font-weight:700;padding:11px 15px;cursor:pointer}.note{font-size:11px;color:var(--muted);margin-top:12px}.walletbox{border:1px dashed var(--line);padding:14px;margin-top:12px;color:var(--muted);font-size:12px;line-height:1.6}.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}#message{padding:12px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:14px;overflow-wrap:anywhere}
 .avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:none;margin-bottom:12px;background:var(--panel2)}.hidden{display:none!important}
 @media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.card{padding:16px}.value{font-size:18px}.code{font-size:21px}}
+
+.mining-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.mining-action{background:linear-gradient(110deg,#b99045,#efd99a);border:0;color:#152033;font-weight:700;padding:12px 18px;cursor:pointer}
+.mining-action.secondary{background:transparent;border:1px solid var(--gold);color:var(--gold2)}
+.mining-action:disabled{opacity:.45;cursor:not-allowed}
+.mining-track{height:9px;background:#ffffff12;border-radius:20px;overflow:hidden;margin-top:9px}
+.mining-track>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b99045,#f0d99c);border-radius:20px;transition:width .3s}
+.mining-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.mining-stat{border:1px solid var(--line);padding:12px;min-width:0}
+.mining-stat strong{display:block;color:var(--gold2);font-size:17px;margin-top:6px;overflow-wrap:anywhere}
+.mining-stat small{color:var(--muted);font-size:10px}
+.mining-history-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:11px}
+@media(max-width:560px){.mining-stats{grid-template-columns:1fr 1fr}.mining-stat:last-child{grid-column:1/-1}}
+
 </style>
 </head>
 <body>
@@ -30,6 +44,36 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <div class="card"><div class="label">Staff registration</div><div class="value" id="created">—</div><div class="note">Your official staff profile record.</div></div>
 <div class="card wide"><div class="label">Your personal referral code</div><div class="code" id="referral">—</div><button class="copy" id="copy">COPY REFERRAL CODE</button><div class="note">Share this code with a person you invite to official EmpireCoin staff registration. Referral rewards are issued only after wallet ownership and the company fee are verified.</div></div>
 <div class="card wide" id="wallet"><div class="label">Internal EMPC wallet</div><div class="value" id="internalBalance">Loading balance…</div><div class="status" id="internalWalletStatus">Checking wallet</div><div class="walletbox">This is your private EmpireCoin site balance. It is separate from EMPC held in a TON blockchain wallet. Only verified server-side operations can change this balance.</div><div class="label" style="margin-top:18px">Recent transactions</div><div id="walletTransactions" class="note">Loading transaction history…</div></div>
+
+<div class="card wide" id="miningPanel">
+ <div class="label">EMPC Mining · 24-hour cycle</div>
+ <div class="value" id="miningHeadline">Checking Mining status…</div>
+ <p id="miningMessage">Mining rewards are distributed from the dedicated 5% EMPC pool. Each cycle lasts 24 hours.</p>
+ <div class="mining-stats">
+  <div class="mining-stat"><small>BASE REWARD</small><strong id="miningBase">50 EMPC</strong></div>
+  <div class="mining-stat"><small>YOUR BONUS</small><strong id="miningBonus">0%</strong></div>
+  <div class="mining-stat"><small>ESTIMATED REWARD</small><strong id="miningEstimate">50 EMPC</strong></div>
+ </div>
+ <div class="walletbox">
+  <div style="display:flex;justify-content:space-between;gap:10px"><span>Mining Pool remaining</span><strong id="miningRemaining">5,000,000 EMPC</strong></div>
+  <div class="mining-track"><i id="miningPoolBar"></i></div>
+  <div class="note" id="miningPoolDetails">5,000,000 EMPC allocated · No fixed end date</div>
+ </div>
+ <div class="walletbox">
+  <div class="label">Mining cycle</div>
+  <div class="value" id="miningTimer">No active cycle</div>
+  <div class="note" id="miningCycleNote">Start Mining to begin your 24-hour cycle.</div>
+  <div class="mining-actions">
+   <button class="mining-action" id="startMining" type="button">START MINING</button>
+   <button class="mining-action" id="claimMining" type="button" hidden>CLAIM EMPC</button>
+  </div>
+ </div>
+ <div class="label" style="margin-top:18px">Bonus conditions</div>
+ <div class="note" id="miningBonusDetails">Bonus eligibility is checked by the EmpireCoin server.</div>
+ <div class="label" style="margin-top:18px">Recent Mining history</div>
+ <div id="miningHistory" class="note">No Mining history yet.</div>
+</div>
+
 <div class="card wide"><div class="label">TON blockchain wallet</div><div id="ton-connect"></div><div class="value" id="tonWalletAddress">Not connected</div><div class="status" id="tonWalletStatus">Wallet ownership not verified</div><button class="copy" id="verifyTonOwnership" type="button" style="margin-top:14px">PREPARE OWNERSHIP VERIFICATION</button><div class="note" id="tonProofHelp">Connect your wallet, then tap Verify Ownership. Your wallet will ask you to sign a TON Proof challenge; no transaction or fee is involved.</div><div class="walletbox">Only a valid server-checked TON Proof signature can confirm wallet ownership. EmpireCoin currently accepts TON Testnet only. Verification does not activate staff status or mark the 0.5 TON company fee as paid. Never enter or share a seed phrase or private key.</div></div>
 <div class="card wide"><div class="label">Verification & activation</div><div class="value" id="fee">Unpaid</div><p>Wallet verification and any fee process are not active yet. EMPC currently operates on TON Testnet; no real 0.5 TON payment will be requested at this stage.</p></div>
 </section>
@@ -70,6 +114,126 @@ async function loadInternalWallet(userId){
  });
  historyEl.append(list);
 }
+
+let miningState=null;
+let miningClock=null;
+function miningApi(action,data={}){
+ return db.auth.getSession().then(({data:{session},error})=>{
+  if(error||!session)throw new Error("Your sign-in session expired. Please sign in again.");
+  currentSession=session;
+  return fetch("https://wytdpyvzbrvzlymifpjq.supabase.co/functions/v1/staff-mining",{
+   method:"POST",
+   headers:{"Authorization":"Bearer "+session.access_token,"apikey":"sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk","Content-Type":"application/json"},
+   body:JSON.stringify({action,...data})
+  });
+ }).then(async response=>{
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||"Mining request failed.");
+  return result;
+ });
+}
+function formatMiningAmount(value){return Number(value||0).toLocaleString(undefined,{maximumFractionDigits:4})+" EMPC"}
+function renderMiningClock(){
+ const cycle=miningState?.current_cycle;
+ if(!cycle)return;
+ const remaining=Math.max(0,new Date(cycle.ends_at).getTime()-Date.now());
+ if(remaining<=0){
+  $("miningTimer").textContent="Ready to claim";
+  $("miningCycleNote").textContent="Your 24-hour Mining cycle is complete. Claim your reward to start another cycle.";
+  $("claimMining").hidden=false;
+  $("claimMining").disabled=false;
+  $("startMining").disabled=true;
+  return;
+ }
+ const hours=Math.floor(remaining/3600000);
+ const minutes=Math.floor((remaining%3600000)/60000);
+ const seconds=Math.floor((remaining%60000)/1000);
+ $("miningTimer").textContent=[hours,minutes,seconds].map(v=>String(v).padStart(2,"0")).join(":");
+ $("miningCycleNote").textContent="Mining started "+new Date(cycle.started_at).toLocaleString()+" · Reward "+formatMiningAmount(cycle.reward_amount);
+ $("claimMining").hidden=true;
+ $("startMining").disabled=true;
+}
+function renderMiningStatus(data){
+ miningState=data;
+ const pool=data.pool||{};
+ $("miningBase").textContent=formatMiningAmount(pool.base_reward);
+ $("miningBonus").textContent=Number(data.bonus_percent||0)+"%";
+ $("miningEstimate").textContent=formatMiningAmount(Number(pool.base_reward||50)*(1+Number(data.bonus_percent||0)/100));
+ $("miningRemaining").textContent=formatMiningAmount(pool.remaining);
+ $("miningPoolDetails").textContent=formatMiningAmount(pool.distributed)+" distributed · "+formatMiningAmount(pool.reserved)+" reserved · No fixed end date";
+ const progress=pool.allocation?Math.min(100,Number(pool.distributed||0)/Number(pool.allocation)*100):0;
+ $("miningPoolBar").style.width=progress+"%";
+ const eligible=Boolean(data.eligible);
+ if(!eligible){
+  $("miningHeadline").textContent="Mining locked";
+  $("miningMessage").textContent="Mining is available only to active staff accounts with an active internal wallet. Your existing account and balance remain unchanged.";
+  $("startMining").disabled=true;
+ }else if(!pool.mining_enabled){
+  $("miningHeadline").textContent="Mining is not open yet";
+  $("miningMessage").textContent="The Mining system is prepared, but the administrator has not opened Mining yet.";
+  $("startMining").disabled=true;
+ }else if(Number(pool.remaining)<=0){
+  $("miningHeadline").textContent="Mining Pool exhausted";
+  $("miningMessage").textContent="The 5,000,000 EMPC Mining allocation has been fully reserved or distributed.";
+  $("startMining").disabled=true;
+ }else{
+  $("miningHeadline").textContent="Mining is available";
+  $("miningMessage").textContent="Start a 24-hour cycle. Claim the completed reward before starting another cycle.";
+  $("startMining").disabled=false;
+ }
+ const cycle=data.current_cycle;
+ if(cycle){
+  if(new Date(cycle.ends_at).getTime()<=Date.now()){
+   $("miningTimer").textContent="Ready to claim";
+   $("miningCycleNote").textContent="Your reward is saved and does not expire. Claim it before starting another cycle.";
+   $("claimMining").hidden=false;
+   $("claimMining").disabled=false;
+   $("startMining").disabled=true;
+  }else{
+   $("claimMining").hidden=true;
+   renderMiningClock();
+  }
+ }else{
+  $("miningTimer").textContent="No active cycle";
+  $("miningCycleNote").textContent="Start Mining to begin your 24-hour cycle.";
+  $("claimMining").hidden=true;
+ }
+ const bonusItems=Object.values(data.bonus_snapshot||{});
+ $("miningBonusDetails").textContent=bonusItems.length
+  ?bonusItems.map(item=>(item.qualified?"✓ ":"○ ")+item.title+" · "+item.bonus_percent+"%").join(" | ")
+  :"No bonus rules are currently active. Verified bonus conditions will appear here when enabled.";
+ const history=$("miningHistory");
+ history.replaceChildren();
+ if(!data.recent_cycles?.length){history.textContent="No Mining history yet.";return}
+ data.recent_cycles.forEach(item=>{
+  const row=document.createElement("div");row.className="mining-history-row";
+  const left=document.createElement("span");left.textContent=new Date(item.started_at).toLocaleString()+" · "+String(item.status).toUpperCase();
+  const right=document.createElement("strong");right.textContent=formatMiningAmount(item.reward_amount);
+  row.append(left,right);history.append(row);
+ });
+}
+async function loadMiningStatus(){
+ try{const data=await miningApi("status");renderMiningStatus(data)}
+ catch(error){$("miningHeadline").textContent="Mining status unavailable";$("miningMessage").textContent=error.message;$("startMining").disabled=true}
+}
+$("startMining").addEventListener("click",async()=>{
+ $("startMining").disabled=true;$("startMining").textContent="STARTING…";
+ try{await miningApi("start");say("Your 24-hour Mining cycle has started.");await loadMiningStatus()}
+ catch(error){say(error.message);await loadMiningStatus()}
+ finally{$("startMining").textContent="START MINING"}
+});
+$("claimMining").addEventListener("click",async()=>{
+ if(!miningState?.current_cycle?.id)return;
+ $("claimMining").disabled=true;$("claimMining").textContent="CLAIMING…";
+ try{
+  const result=await miningApi("claim",{cycle_id:miningState.current_cycle.id});
+  say("Mining reward claimed: "+formatMiningAmount(result.result?.reward_amount));
+  await loadInternalWallet(currentSession.user.id);
+  await loadMiningStatus();
+ }catch(error){say(error.message);await loadMiningStatus()}
+ finally{$("claimMining").textContent="CLAIM EMPC"}
+});
+
 function tonProofApi(action,data={}){
  if(!currentSession?.access_token)throw new Error("Your staff session expired. Please sign in again.");
  return fetch("https://wytdpyvzbrvzlymifpjq.supabase.co/functions/v1/staff-ton-proof",{
@@ -211,6 +375,8 @@ async function init(){
  $("fee").textContent=profile.verification_fee_status.replaceAll("_"," ").toUpperCase();
  $("dashboard").classList.remove("hidden");
  await loadInternalWallet(session.user.id);
+ await loadMiningStatus();
+ if(!miningClock)miningClock=setInterval(renderMiningClock,1000);
  say(profile.status==="active"?"Your staff account is active.":"Your staff profile is registered but not active yet. Complete the required verification steps when they become available.");
 }
 $("copy").addEventListener("click",async()=>{if(!referralCode)return;try{await navigator.clipboard.writeText(referralCode);$("copy").textContent="COPIED";setTimeout(()=>$("copy").textContent="COPY REFERRAL CODE",1800)}catch(e){say("Copy is unavailable in this browser. Your referral code is "+referralCode)}});

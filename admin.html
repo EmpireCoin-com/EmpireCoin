@@ -316,7 +316,7 @@ async function applyStaffWalletChange(){
   });
   const result=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(result.error||result.message||("Request failed (HTTP "+response.status+")"));
-  msg.textContent="Wallet updated successfully. New balance: "+Number(result.balance??result.wallet?.balance??result.data?.balance??NaN).toFixed(9)+" EMPC. Refreshing…";
+  const operation=result.result||result.data||result;const newBalance=Number(operation.balance);msg.textContent=(operation.duplicate?"This request was already processed. ":"Wallet updated successfully. ")+"New balance: "+(Number.isFinite(newBalance)?newBalance.toFixed(9):"updated")+" EMPC. Refreshing…";
   document.getElementById("walletAmount").value="";document.getElementById("walletDescription").value="";
   await loadStaff();
   await openStaffWallet(selectedStaffWallet.user_id,{display_name:staffName.split(" · ")[0]});

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081426">
+<title>Staff Dashboard — EmpireCoin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#081426;--panel:#102641;--panel2:#132d49;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38;--green:#8fd1ad}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;padding-bottom:88px}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}.signout{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
+main{width:min(100% - 28px,900px);margin:24px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}
+h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}.card{background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);padding:18px;min-width:0}.wide{grid-column:1/-1}.label{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}.value{font-size:20px;font-weight:700;margin-top:9px;overflow-wrap:anywhere}.status{display:inline-block;padding:6px 10px;border:1px solid var(--line);color:var(--gold2);font-size:11px;margin-top:10px}.code{font:700 23px "DM Sans",sans-serif;letter-spacing:1.2px;color:var(--gold2);margin:10px 0;overflow-wrap:anywhere}.copy{background:linear-gradient(110deg,#b99045,#efd99a);border:0;color:#152033;font-weight:700;padding:11px 15px;cursor:pointer}.note{font-size:11px;color:var(--muted);margin-top:12px}.walletbox{border:1px dashed var(--line);padding:14px;margin-top:12px;color:var(--muted);font-size:12px;line-height:1.6}.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}#message{padding:12px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:14px;overflow-wrap:anywhere}
+.hidden{display:none!important}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.card{padding:16px}.value{font-size:18px}.code{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button class="signout" id="signout">SIGN OUT</button></header>
+<main>
+<div class="eyebrow">OFFICIAL STAFF PORTAL</div>
+<h1>Staff Dashboard</h1>
+<p id="welcome">Loading your secure staff profile…</p>
+<div id="message" role="status" aria-live="polite">Verifying your account…</div>
+<section class="grid hidden" id="dashboard">
+<div class="card"><div class="label">Staff name</div><div class="value" id="name">—</div><div class="status" id="status">—</div></div>
+<div class="card"><div class="label">Staff registration</div><div class="value" id="created">—</div><div class="note">Your official staff profile record.</div></div>
+<div class="card wide"><div class="label">Your personal referral code</div><div class="code" id="referral">—</div><button class="copy" id="copy">COPY REFERRAL CODE</button><div class="note">Share this code with a person you invite to official EmpireCoin staff registration. Referral rewards are issued only after wallet ownership and the company fee are verified.</div></div>
+<div class="card wide"><div class="label">Internal EMPC wallet</div><div class="value">Not activated</div><div class="walletbox">Your internal EMPC balance and transaction history will appear here after the secure wallet ledger is enabled. This balance is separate from TON blockchain assets.</div></div>
+<div class="card wide"><div class="label">TON blockchain wallet</div><div class="value">Not connected</div><div class="walletbox">Connect your own TON wallet in the next setup step. Never enter or share a seed phrase or private key. Wallet ownership will be verified with a signed challenge.</div></div>
+<div class="card wide"><div class="label">Verification & activation</div><div class="value" id="fee">Unpaid</div><p>Wallet verification and any fee process are not active yet. EMPC currently operates on TON Testnet; no real 0.5 TON payment will be requested at this stage.</p></div>
+</section>
+</main>
+<nav class="nav" aria-label="Staff navigation">
+<a href="index.html"><b>⌂</b>Home</a><a href="#profile" class="active"><b>♙</b>Profile</a><a href="#wallet"><b>◈</b>Wallet</a><a href="#staff"><b>♜</b>Staff</a><a href="#more"><b>⋯</b>More</a>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+const $=id=>document.getElementById(id);let referralCode="";
+function say(t){$("message").textContent=t}
+async function init(){
+ const {data:{session},error:sessionError}=await db.auth.getSession();
+ if(sessionError||!session){location.replace("staff-login.html");return}
+ const {data:profile,error}=await db.from("staff_profiles").select("display_name,referral_code,status,created_at,verification_fee_status,ton_wallet_address,wallet_verified_at").eq("user_id",session.user.id).maybeSingle();
+ if(error){say("Could not load your staff profile: "+error.message);return}
+ if(!profile){say("Telegram identity verified, but no official staff profile is linked to this account. Contact the administrator for an invitation.");return}
+ referralCode=profile.referral_code;
+ $("welcome").textContent="Welcome, "+profile.display_name+". This dashboard shows only your own staff information.";
+ $("name").textContent=profile.display_name;
+ $("status").textContent=profile.status.replaceAll("_"," ").toUpperCase();
+ $("created").textContent=new Date(profile.created_at).toLocaleDateString();
+ $("referral").textContent=profile.referral_code;
+ $("fee").textContent=profile.verification_fee_status.replaceAll("_"," ").toUpperCase();
+ $("dashboard").classList.remove("hidden");
+ say(profile.status==="active"?"Your staff account is active.":"Your staff profile is registered but not active yet. Complete the required verification steps when they become available.");
+}
+$("copy").addEventListener("click",async()=>{if(!referralCode)return;try{await navigator.clipboard.writeText(referralCode);$("copy").textContent="COPIED";setTimeout(()=>$("copy").textContent="COPY REFERRAL CODE",1800)}catch(e){say("Copy is unavailable in this browser. Your referral code is "+referralCode)}});
+$("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+init();
+</script>
+</body>
+</html>

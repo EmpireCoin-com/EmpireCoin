@@ -11,6 +11,7 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:86px;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif}
 header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
 .brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}button{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
+.staff-hub-link{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:15px 17px;border:1px solid var(--gold);background:linear-gradient(110deg,#1b3550,#10243a);color:var(--gold2);text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.3px}.staff-hub-link span{display:block;color:var(--muted);font-size:11px;font-weight:400;letter-spacing:0;margin-top:4px}.staff-hub-link .arrow{font-size:22px;color:var(--gold2)}
 main{width:min(100% - 28px,680px);margin:30px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
 .profile-card{margin-top:24px;padding:24px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);text-align:center}
 .avatar{width:104px;height:104px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:none;margin:0 auto 16px;background:var(--panel)}
@@ -32,6 +33,7 @@ main{width:min(100% - 28px,680px);margin:30px auto}.eyebrow{font-size:10px;lette
 <div class="eyebrow">OFFICIAL STAFF PORTAL</div>
 <h1>My Profile</h1>
 <p>Your personal staff information and verified Telegram identity.</p>
+<a class="staff-hub-link" href="staff-dashboard.html"><div>STAFF DASHBOARD<span>Open staff portal · TON wallet connection and staff tools</span></div><div class="arrow" aria-hidden="true">›</div></a>
 <div id="message" role="status" aria-live="polite">Verifying your secure account…</div>
 <section class="profile-card" id="profileCard" hidden>
 <img id="avatar" class="avatar" alt="Telegram profile photo">

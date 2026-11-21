@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#081426">
+  <title>Staff Access — EmpireCoin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:22px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 15%,#173453 0,#081426 68%);color:var(--text);font-family:"DM Sans",sans-serif}
+    .card{width:min(100%,460px);padding:34px 28px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);box-shadow:0 25px 70px #0006;text-align:center}
+    .logo{width:68px;height:68px;object-fit:contain;margin-bottom:12px}
+    .brand{font-weight:700;letter-spacing:3px}.gold{color:var(--gold2)}.sub{font-size:9px;letter-spacing:3px;color:var(--muted);margin-top:7px}
+    h1{font:600 32px "Playfair Display",serif;margin:30px 0 9px}
+    p{color:var(--muted);font-size:13px;line-height:1.7}
+    button{width:100%;margin-top:18px;padding:15px;border:0;background:linear-gradient(110deg,#b99045,#efd99a);color:#152033;font-weight:700;font-size:13px;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}.secondary{background:transparent;border:1px solid var(--line);color:var(--gold2)}
+    #message{min-height:42px;margin-top:18px;color:var(--gold2);font-size:12px;overflow-wrap:anywhere}
+    .small{font-size:10px;color:#8291a3;margin-top:22px}
+    .hidden{display:none}.identity{padding:13px;margin-top:14px;border:1px solid var(--line);background:#ffffff08;text-align:left;font-size:12px;overflow-wrap:anywhere}
+    a{color:var(--gold2)}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="https://i.ibb.co/Cpy4zkWD/file-0000000027fc8210929d310091b874ef.png" alt="EmpireCoin logo">
+    <div class="brand">EMPIRE<span class="gold">COIN</span></div>
+    <div class="sub">OFFICIAL STAFF PORTAL</div>
+    <h1>Staff Access</h1>
+    <p>Sign in with your Telegram account to begin official staff registration.</p>
+    <button id="telegramButton" type="button">CONTINUE WITH TELEGRAM</button>
+    <div id="identity" class="identity hidden"></div>
+    <button id="signOutButton" class="secondary hidden" type="button">SIGN OUT</button>
+    <div id="message" role="status" aria-live="polite">Telegram authentication is ready.</div>
+    <div class="small">Telegram sign-in verifies your identity only. It does not automatically grant official staff status or activate a staff account.</div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://wytdpyvzbrvzlymifpjq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
+    const message = document.getElementById("message");
+    const telegramButton = document.getElementById("telegramButton");
+    const signOutButton = document.getElementById("signOutButton");
+    const identity = document.getElementById("identity");
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const redirectUrl = new URL("staff-login.html", window.location.href).href;
+
+    function showSession(user) {
+      if (!user) {
+        telegramButton.classList.remove("hidden");
+        signOutButton.classList.add("hidden");
+        identity.classList.add("hidden");
+        message.textContent = "Telegram authentication is ready.";
+        return;
+      }
+      const meta = user.user_metadata || {};
+      const display = meta.full_name || meta.name || meta.preferred_username || "Telegram user";
+      telegramButton.classList.add("hidden");
+      signOutButton.classList.remove("hidden");
+      identity.classList.remove("hidden");
+      identity.textContent = "Signed in as: " + display;
+      message.textContent = "Telegram identity verified. Official staff registration is the next step; no staff privileges have been granted.";
+    }
+
+    telegramButton.addEventListener("click", async () => {
+      telegramButton.disabled = true;
+      message.textContent = "Redirecting to Telegram securely…";
+      const { error } = await db.auth.signInWithOAuth({
+        provider: "custom:telegram",
+        options: {
+          redirectTo: redirectUrl,
+          scopes: "openid profile"
+        }
+      });
+      if (error) {
+        message.textContent = "Telegram sign-in could not start: " + error.message;
+        telegramButton.disabled = false;
+      }
+    });
+
+    signOutButton.addEventListener("click", async () => {
+      signOutButton.disabled = true;
+      const { error } = await db.auth.signOut();
+      signOutButton.disabled = false;
+      if (error) message.textContent = "Sign out failed: " + error.message;
+      else showSession(null);
+    });
+
+    db.auth.getSession().then(({ data, error }) => {
+      if (error) message.textContent = "Could not check the sign-in session: " + error.message;
+      showSession(data?.session?.user || null);
+    });
+
+    db.auth.onAuthStateChange((_event, session) => showSession(session?.user || null));
+  </script>
+</body>
+</html>

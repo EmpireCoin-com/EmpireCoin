@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081426">
+<title>Staff Profile — EmpireCoin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:86px;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}button{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
+main{width:min(100% - 28px,680px);margin:30px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
+.profile-card{margin-top:24px;padding:24px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line);text-align:center}
+.avatar{width:104px;height:104px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:none;margin:0 auto 16px;background:var(--panel)}
+.avatar-fallback{width:104px;height:104px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 16px;color:var(--gold2);font-size:38px;background:var(--panel)}
+.name{font-size:23px;font-weight:700;overflow-wrap:anywhere}.username{color:var(--muted);font-size:13px;margin-top:6px}
+.status{display:inline-block;margin-top:14px;padding:7px 12px;border:1px solid var(--line);color:var(--gold2);font-size:11px;letter-spacing:1px}
+.details{display:grid;gap:0;margin-top:18px;text-align:left;border-top:1px solid var(--line)}
+.detail{padding:16px 2px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;font-size:13px}
+.detail span:first-child{color:var(--muted)}.detail strong{text-align:right;overflow-wrap:anywhere}
+#message{padding:13px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:16px;overflow-wrap:anywhere}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}
+@media(max-width:480px){main{margin:24px auto}.profile-card{padding:20px 16px}.detail{font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button id="signout">SIGN OUT</button></header>
+<main>
+<div class="eyebrow">OFFICIAL STAFF PORTAL</div>
+<h1>My Profile</h1>
+<p>Your personal staff information and verified Telegram identity.</p>
+<div id="message" role="status" aria-live="polite">Verifying your secure account…</div>
+<section class="profile-card" id="profileCard" hidden>
+<img id="avatar" class="avatar" alt="Telegram profile photo">
+<div id="avatarFallback" class="avatar-fallback" aria-hidden="true">♙</div>
+<div class="name" id="name">—</div>
+<div class="username" id="username"></div>
+<div class="status" id="status">—</div>
+<div class="details">
+<div class="detail"><span>Staff account</span><strong>Official staff</strong></div>
+<div class="detail"><span>Registration date</span><strong id="created">—</strong></div>
+<div class="detail"><span>Telegram ID</span><strong id="telegramId">—</strong></div>
+</div>
+</section>
+</main>
+<nav class="nav" aria-label="Staff navigation">
+<a href="index.html"><b>⌂</b>Home</a>
+<a href="staff-profile.html" class="active" aria-current="page"><b>♙</b>Profile</a>
+<a href="staff-dashboard.html#wallet"><b>◈</b>Wallet</a>
+<a href="staff-dashboard.html#staff"><b>♜</b>Staff</a>
+<a href="whitepaper.html"><b>⋯</b>More</a>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+const $=id=>document.getElementById(id);
+function say(message){$("message").textContent=message}
+async function init(){
+ const {data:{session},error:sessionError}=await db.auth.getSession();
+ if(sessionError||!session){location.replace("staff-login.html");return}
+ const {data:profile,error}=await db.from("staff_profiles").select("display_name,status,created_at").eq("user_id",session.user.id).maybeSingle();
+ if(error){say("Could not load your staff profile: "+error.message);return}
+ if(!profile){say("Telegram identity verified, but this account has no official staff profile. Contact the administrator for an invitation.");return}
+ const meta=session.user.user_metadata||{};
+ const username=meta.preferred_username||meta.username||"";
+ $("name").textContent=profile.display_name||meta.name||"Staff member";
+ $("username").textContent=username?"@"+username:"Telegram username unavailable";
+ $("status").textContent=(profile.status||"unknown").replaceAll("_"," ").toUpperCase();
+ $("created").textContent=profile.created_at?new Date(profile.created_at).toLocaleDateString():"—";
+ $("telegramId").textContent=session.user.identities?.find(x=>x.provider==="custom:telegram")?.identity_data?.id||meta.id||"Verified";
+ const photo=meta.picture||meta.photo_url||meta.avatar_url||"";
+ if(photo){try{const parsed=new URL(photo);if(parsed.protocol==="https:"){$("avatar").src=parsed.href;$("avatar").style.display="block";$("avatarFallback").style.display="none"}}catch(_){}}
+ $("profileCard").hidden=false;
+ say(profile.status==="active"?"Your official staff profile is active.":"Your profile is registered. Current status: "+profile.status.replaceAll("_"," ")+".");
+}
+$("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+init();
+</script>
+</body>
+</html>

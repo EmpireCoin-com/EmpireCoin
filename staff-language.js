@@ -55,7 +55,7 @@ const words={
 "Language":["ژبه","زبان"],"English":["انګلیسي","انگلیسی"],"Pashto":["پښتو","پشتو"],"Persian":["فارسی","فارسی"]
 };
 let lang="en",observer;
-const dict=()=>Object.fromEntries(Object.entries(words).map(([k,v])=>[k,v[lang==="ps"?0:1]]));
+const dict=()=>lang==="en"?{}:Object.fromEntries(Object.entries(words).map(([k,v])=>[k,v[lang==="ps"?0:1]]));
 function translate(root=document.body){
  const d=dict();
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);

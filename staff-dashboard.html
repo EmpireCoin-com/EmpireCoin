@@ -30,7 +30,7 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <div class="card"><div class="label">Staff registration</div><div class="value" id="created">—</div><div class="note">Your official staff profile record.</div></div>
 <div class="card wide"><div class="label">Your personal referral code</div><div class="code" id="referral">—</div><button class="copy" id="copy">COPY REFERRAL CODE</button><div class="note">Share this code with a person you invite to official EmpireCoin staff registration. Referral rewards are issued only after wallet ownership and the company fee are verified.</div></div>
 <div class="card wide" id="wallet"><div class="label">Internal EMPC wallet</div><div class="value" id="internalBalance">Loading balance…</div><div class="status" id="internalWalletStatus">Checking wallet</div><div class="walletbox">This is your private EmpireCoin site balance. It is separate from EMPC held in a TON blockchain wallet. Only verified server-side operations can change this balance.</div><div class="label" style="margin-top:18px">Recent transactions</div><div id="walletTransactions" class="note">Loading transaction history…</div></div>
-<div class="card wide"><div class="label">TON blockchain wallet</div><div class="value">Not connected</div><div class="walletbox">Connect your own TON wallet in the next setup step. Never enter or share a seed phrase or private key. Wallet ownership will be verified with a signed challenge.</div></div>
+<div class="card wide"><div class="label">TON blockchain wallet</div><div id="ton-connect"></div><div class="value" id="tonWalletAddress">Not connected</div><div class="status" id="tonWalletStatus">Wallet ownership not verified</div><div class="walletbox">Connect your own TON wallet using TON Connect. This first step only establishes a wallet connection; it does NOT prove ownership or activate your staff account. A separate secure TON Proof signature check is required. Never enter or share a seed phrase or private key.</div></div>
 <div class="card wide"><div class="label">Verification & activation</div><div class="value" id="fee">Unpaid</div><p>Wallet verification and any fee process are not active yet. EMPC currently operates on TON Testnet; no real 0.5 TON payment will be requested at this stage.</p></div>
 </section>
 </main>
@@ -38,6 +38,7 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <a href="index.html"><b>⌂</b>Home</a><a href="staff-profile.html"><b>♙</b>Profile</a><a href="staff-wallet.html"><b>◈</b>Wallet</a><a href="staff-tasks.html"><b>✓</b>Tasks</a><a href="staff-dashboard.html" aria-current="page"><b>♜</b>Staff</a>
 </nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@tonconnect/ui@5.0.3/dist/tonconnect-ui.min.js"></script>
 <script>
 const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
 const $=id=>document.getElementById(id);let referralCode="";
@@ -69,6 +70,35 @@ async function loadInternalWallet(userId){
  });
  historyEl.append(list);
 }
+function initTonConnect(){
+ const addressEl=$("tonWalletAddress"),statusEl=$("tonWalletStatus");
+ if(!window.TON_CONNECT_UI||!window.TON_CONNECT_UI.TonConnectUI){
+  statusEl.textContent="TON Connect could not load. Refresh the page and try again.";
+  return;
+ }
+ try{
+  const tonConnectUI=new window.TON_CONNECT_UI.TonConnectUI({
+   manifestUrl:"https://empirecoin-com.github.io/EmpireCoin/tonconnect-manifest.json",
+   buttonRootId:"ton-connect"
+  });
+  tonConnectUI.onStatusChange(wallet=>{
+   if(!wallet){
+    addressEl.textContent="Not connected";
+    statusEl.textContent="Wallet ownership not verified";
+    return;
+   }
+   const raw=wallet.account.address||"";
+   let shown=raw;
+   try{if(window.TON_CONNECT_UI.toUserFriendlyAddress)shown=window.TON_CONNECT_UI.toUserFriendlyAddress(raw,true);}catch(_){}
+   addressEl.textContent=shown;
+   const network=wallet.account.chain==="-3"?"TON Testnet":wallet.account.chain==="-239"?"TON Mainnet":"TON network "+wallet.account.chain;
+   statusEl.textContent="Connected · "+network+" · Ownership verification pending";
+  });
+ }catch(error){
+  statusEl.textContent="Could not initialize TON Connect. Please refresh and try again.";
+  console.error("TON Connect initialization failed",error);
+ }
+}
 async function init(){
  const {data:{session},error:sessionError}=await db.auth.getSession();
  if(sessionError||!session){location.replace("staff-login.html");return}
@@ -93,6 +123,7 @@ async function init(){
 }
 $("copy").addEventListener("click",async()=>{if(!referralCode)return;try{await navigator.clipboard.writeText(referralCode);$("copy").textContent="COPIED";setTimeout(()=>$("copy").textContent="COPY REFERRAL CODE",1800)}catch(e){say("Copy is unavailable in this browser. Your referral code is "+referralCode)}});
 $("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+initTonConnect();
 init();
 </script>
 </body>

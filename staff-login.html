@@ -34,6 +34,7 @@
     <p>Sign in with your Telegram account to begin official staff registration.</p>
     <button id="telegramButton" type="button">CONTINUE WITH TELEGRAM</button>
     <div id="identity" class="identity hidden"></div>
+    <button id="dashboardButton" class="hidden" type="button">OPEN STAFF DASHBOARD</button>
     <button id="signOutButton" class="secondary hidden" type="button">SIGN OUT</button>
     <div id="message" role="status" aria-live="polite">Telegram authentication is ready.</div>
     <div class="small">Telegram sign-in verifies your identity only. It does not automatically grant official staff status or activate a staff account.</div>
@@ -45,6 +46,7 @@
     const message = document.getElementById("message");
     const telegramButton = document.getElementById("telegramButton");
     const signOutButton = document.getElementById("signOutButton");
+    const dashboardButton = document.getElementById("dashboardButton");
     const identity = document.getElementById("identity");
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const redirectUrl = new URL("staff-login.html", window.location.href).href;
@@ -53,6 +55,7 @@
       if (!user) {
         telegramButton.classList.remove("hidden");
         signOutButton.classList.add("hidden");
+        dashboardButton.classList.add("hidden");
         identity.classList.add("hidden");
         message.textContent = "Telegram authentication is ready.";
         return;
@@ -61,6 +64,7 @@
       const display = meta.full_name || meta.name || meta.preferred_username || "Telegram user";
       telegramButton.classList.add("hidden");
       signOutButton.classList.remove("hidden");
+      dashboardButton.classList.remove("hidden");
       identity.classList.remove("hidden");
       identity.textContent = "Signed in as: " + display;
       message.textContent = "Telegram identity verified. Official staff registration is the next step; no staff privileges have been granted.";
@@ -81,6 +85,8 @@
         telegramButton.disabled = false;
       }
     });
+
+    dashboardButton.addEventListener("click", () => { window.location.href = "staff-dashboard.html"; });
 
     signOutButton.addEventListener("click", async () => {
       signOutButton.disabled = true;

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081426">
+<title>Staff Wallet — EmpireCoin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38;--green:#8fd1ad}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:86px;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}button{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:9px 13px;cursor:pointer}
+main{width:min(100% - 28px,760px);margin:30px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
+.card{margin-top:22px;padding:22px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line)}
+.label{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}.balance{font-size:clamp(27px,7vw,38px);font-weight:700;color:var(--gold2);margin:12px 0 6px;overflow-wrap:anywhere}.status{display:inline-block;padding:6px 10px;border:1px solid var(--line);color:var(--gold2);font-size:11px;margin-top:8px}
+.notice{border:1px dashed var(--line);padding:14px;margin-top:16px;color:var(--muted);font-size:12px;line-height:1.65}
+.history{margin-top:24px}.history h2{font:600 22px "Playfair Display",serif}.transaction{padding:14px 0;border-bottom:1px solid var(--line)}.transaction-head{display:flex;justify-content:space-between;gap:12px;font-size:13px}.transaction-detail{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.5}.empty{color:var(--muted);font-size:13px;padding:16px 0}
+#message{padding:13px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin-top:16px;overflow-wrap:anywhere}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}
+@media(max-width:480px){main{margin:24px auto}.card{padding:18px}}
+</style>
+</head>
+<body>
+<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button id="signout">SIGN OUT</button></header>
+<main>
+<div class="eyebrow">OFFICIAL STAFF PORTAL</div>
+<h1>My Wallet</h1>
+<p>Your private internal EMPC account balance and transaction history.</p>
+<div id="message" role="status" aria-live="polite">Verifying your secure account…</div>
+<section id="walletCard" class="card" hidden>
+<div class="label">Available internal balance</div>
+<div class="balance" id="balance">— EMPC</div>
+<div class="status" id="walletStatus">—</div>
+<div class="notice">This is your internal EmpireCoin website ledger. It is not the same as EMPC held in an external TON blockchain wallet. Deposits, withdrawals and transfers will be provided only through verified secure operations. Never share your seed phrase or private key.</div>
+<div class="history">
+<h2>Transaction history</h2>
+<div class="label">Latest 25 transactions</div>
+<div id="transactions" class="empty">Loading transaction history…</div>
+</div>
+</section>
+</main>
+<nav class="nav" aria-label="Staff navigation">
+<a href="index.html"><b>⌂</b>Home</a>
+<a href="staff-profile.html"><b>♙</b>Profile</a>
+<a href="staff-wallet.html" class="active" aria-current="page"><b>◈</b>Wallet</a>
+<a href="staff-dashboard.html#staff"><b>♜</b>Staff</a>
+<a href="whitepaper.html"><b>⋯</b>More</a>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+const $=id=>document.getElementById(id);
+function say(message){$("message").textContent=message}
+function addText(parent,tag,value,className){const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;parent.appendChild(el);return el}
+async function init(){
+ const {data:{session},error:sessionError}=await db.auth.getSession();
+ if(sessionError||!session){location.replace("staff-login.html");return}
+ const {data:profile,error:profileError}=await db.from("staff_profiles").select("user_id").eq("user_id",session.user.id).maybeSingle();
+ if(profileError){say("Could not verify your staff profile: "+profileError.message);return}
+ if(!profile){say("This Telegram account has no official staff profile. Contact the administrator for an invitation.");return}
+ const {data:wallet,error}=await db.from("staff_wallets").select("id,balance,currency,wallet_status").eq("user_id",session.user.id).maybeSingle();
+ if(error){say("Could not load your wallet: "+error.message);return}
+ if(!wallet){say("Your staff profile is valid, but an internal wallet has not been created yet. Contact the administrator.");return}
+ $("balance").textContent=Number(wallet.balance).toFixed(9)+" "+wallet.currency;
+ $("walletStatus").textContent=wallet.wallet_status.replaceAll("_"," ").toUpperCase();
+ $("walletCard").hidden=false;
+ const {data:items,error:historyError}=await db.from("staff_wallet_transactions").select("id,transaction_type,amount,balance_after,description,created_at").eq("wallet_id",wallet.id).order("created_at",{ascending:false}).limit(25);
+ const root=$("transactions");root.replaceChildren();
+ if(historyError){addText(root,"div","Transaction history could not be loaded: "+historyError.message,"empty");}
+ else if(!items||items.length===0){addText(root,"div","No transactions yet.","empty");}
+ else items.forEach(item=>{
+  const row=document.createElement("article");row.className="transaction";
+  const heading=document.createElement("div");heading.className="transaction-head";
+  addText(heading,"strong",item.transaction_type.replaceAll("_"," ").toUpperCase());
+  addText(heading,"strong",Number(item.amount).toFixed(9)+" "+wallet.currency);
+  row.appendChild(heading);
+  addText(row,"div",item.description+" · Balance after: "+Number(item.balance_after).toFixed(9)+" "+wallet.currency,"transaction-detail");
+  addText(row,"div",new Date(item.created_at).toLocaleString(),"transaction-detail");
+  root.appendChild(row);
+ });
+ say("Your internal wallet is loaded securely.");
+}
+$("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+init();
+</script>
+</body>
+</html>

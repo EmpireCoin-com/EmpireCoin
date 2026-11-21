@@ -41,7 +41,7 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <script src="https://unpkg.com/@tonconnect/ui@5.0.3/dist/tonconnect-ui.min.js"></script>
 <script>
 const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
-const $=id=>document.getElementById(id);let referralCode="";let currentSession=null;let tonConnectUI=null;let proofInFlight=false;
+const $=id=>document.getElementById(id);let referralCode="";let currentSession=null;let tonConnectUI=null;let proofInFlight=false;let proofChallengeReady=false;
 function say(t){$("message").textContent=t}
 async function loadInternalWallet(userId){
  const balanceEl=$("internalBalance"),statusEl=$("internalWalletStatus"),historyEl=$("walletTransactions");
@@ -111,6 +111,8 @@ async function submitTonProof(wallet,proof){
   say(error.message);
  }finally{
   proofInFlight=false;
+  proofChallengeReady=false;
+  try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
   $("verifyTonOwnership").disabled=false;
   $("verifyTonOwnership").textContent="VERIFY WALLET OWNERSHIP";
  }
@@ -140,7 +142,15 @@ function initTonConnect(){
    if(!proofInFlight)statusEl.textContent="Connected · "+network+" · Ownership verification pending";
    const item=wallet.connectItems&&wallet.connectItems.tonProof;
    if(item&&item.proof)void submitTonProof(wallet,item.proof);
-   else if(item&&item.error) $("tonProofHelp").textContent="This wallet did not provide TON Proof support. Try updating Tonkeeper or another supported TON wallet.";
+   else if(item&&item.error){
+    $("tonProofHelp").textContent="This wallet did not provide TON Proof support. Try updating Tonkeeper or another supported TON wallet.";
+    proofChallengeReady=false;
+    try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
+   }else if(proofChallengeReady){
+    $("tonProofHelp").textContent="Wallet reconnected, but it did not return a TON Proof signature. Please disconnect and try again with an updated Tonkeeper version.";
+    proofChallengeReady=false;
+    try{tonConnectUI.setConnectRequestParameters(null)}catch(_){}
+   }
   });
  }catch(error){
   statusEl.textContent="Could not initialize TON Connect. Please refresh and try again.";
@@ -149,16 +159,28 @@ function initTonConnect(){
 }
 async function startTonOwnershipVerification(){
  if(!tonConnectUI){say("TON Connect is not ready. Refresh the page and try again.");return}
+ if(proofChallengeReady){
+  $("tonProofHelp").textContent="A verification request is already prepared. Please tap CONNECT WALLET above to reconnect and sign it.";
+  say("Your secure request is ready. Tap Connect Wallet to continue.");
+  return;
+ }
  try{
   $("verifyTonOwnership").disabled=true;
   $("verifyTonOwnership").textContent="PREPARING…";
   $("tonProofHelp").textContent="Preparing a secure, single-use verification challenge…";
-  if(tonConnectUI.connected)await tonConnectUI.disconnect();
+  // Create the challenge first. If this fails, the current wallet connection remains untouched.
   const challenge=await tonProofApi("challenge");
   tonConnectUI.setConnectRequestParameters({state:"ready",value:{tonProof:challenge.payload}});
-  await tonConnectUI.openModal();
+  proofChallengeReady=true;
+  if(tonConnectUI.connected){
+   // TON Proof is returned during a fresh connect request. Disconnect only after the challenge is ready.
+   await tonConnectUI.disconnect();
+  }
+  $("tonWalletStatus").textContent="Verification request ready · Wallet disconnected for secure reconnection";
+  $("tonProofHelp").textContent="Step 1 complete. Now tap the CONNECT WALLET button above and choose Tonkeeper. Tonkeeper should show a TON Proof signature request. Approve the signature (no transaction or fee).";
+  say("Secure request prepared. Tap Connect Wallet above to reconnect and sign.");
  }catch(error){
-  $("tonProofHelp").textContent=error.message;
+  $("tonProofHelp").textContent=error.message+" Your wallet connection was not intentionally changed if challenge preparation failed.";
   say(error.message);
  }finally{
   $("verifyTonOwnership").disabled=false;

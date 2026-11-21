@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081426">
+<title>Staff Tasks — EmpireCoin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#081426;--panel:#102641;--gold:#d8b66a;--gold2:#f0d99c;--text:#f4f0e7;--muted:#a8b3c2;--line:#d8b66a38;--green:#8fd1ad;--red:#e7a0a0}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:90px;background:radial-gradient(ellipse at 50% 0,#173453 0,var(--navy) 62%);color:var(--text);font-family:"DM Sans",sans-serif}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:#081426bb;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{font-weight:700;letter-spacing:2px}.gold{color:var(--gold2)}button{background:transparent;border:1px solid var(--line);color:var(--gold2);padding:10px 14px;cursor:pointer;font:600 11px "DM Sans",sans-serif}
+main{width:min(100% - 28px,760px);margin:28px auto}.eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:700}h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:var(--muted);line-height:1.65;font-size:13px}
+#message{padding:13px;border:1px solid var(--line);color:var(--gold2);font-size:12px;margin:18px 0;overflow-wrap:anywhere}
+.task{margin:16px 0;padding:20px;background:linear-gradient(145deg,#122b47,#0b1b2e);border:1px solid var(--line)}
+.task h2{font:600 21px "Playfair Display",serif;margin:0 0 9px}.description{color:var(--text);font-size:13px;white-space:pre-wrap;line-height:1.7}
+.instructions{margin-top:14px;padding:13px;border-left:2px solid var(--gold);background:#08142670;color:var(--muted);font-size:12px;white-space:pre-wrap;line-height:1.7}
+.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.reward{color:var(--gold2);font-weight:700}.submission{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.submission label{display:block;color:var(--muted);font-size:11px;margin:12px 0 6px}
+textarea,input{width:100%;padding:12px;background:#071322;color:var(--text);border:1px solid var(--line);font:13px "DM Sans",sans-serif;border-radius:0}
+textarea{min-height:90px;resize:vertical}button.submit{margin-top:12px;background:var(--gold);color:#081426;border:0;font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}.state{font-size:11px;color:var(--gold2);margin-top:10px;line-height:1.6}.state.approved{color:var(--green)}.state.rejected{color:var(--red)}
+.empty{padding:18px 0;color:var(--muted);font-size:13px}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:8;display:flex;justify-content:space-around;gap:3px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));background:#071322f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav a{color:var(--muted);text-decoration:none;font-size:10px;text-align:center;flex:1;padding:7px 2px}.nav a.active{color:var(--gold2)}.nav b{display:block;font-size:17px;margin-bottom:3px;font-weight:500}
+@media(max-width:480px){main{margin:22px auto}.task{padding:17px}}
+</style>
+</head>
+<body>
+<header><div class="brand">EMPIRE<span class="gold">COIN</span> <span style="font-size:10px;color:var(--muted);letter-spacing:1px">STAFF</span></div><button id="signout">SIGN OUT</button></header>
+<main>
+<div class="eyebrow">OFFICIAL STAFF PORTAL</div>
+<h1>Available Tasks</h1>
+<p>Complete an assigned task, then submit your work or proof for administrator review. EMPC rewards are credited only after approval.</p>
+<div id="message" role="status" aria-live="polite">Verifying your secure staff account…</div>
+<section id="taskList" aria-live="polite"></section>
+</main>
+<nav class="nav" aria-label="Staff navigation">
+<a href="index.html"><b>⌂</b>Home</a>
+<a href="staff-profile.html"><b>♙</b>Profile</a>
+<a href="staff-wallet.html"><b>◈</b>Wallet</a>
+<a href="staff-tasks.html" class="active" aria-current="page"><b>✓</b>Tasks</a>
+<a href="whitepaper.html"><b>⋯</b>More</a>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
+const $=id=>document.getElementById(id);
+function say(message){$("message").textContent=message}
+function el(tag,value,className){const node=document.createElement(tag);node.textContent=value??"";if(className)node.className=className;return node}
+function dateText(value){return value?new Date(value).toLocaleString():"No deadline"}
+function renderTask(task,submission){
+ const card=document.createElement("article");card.className="task";
+ card.appendChild(el("h2",task.title));
+ card.appendChild(el("div",task.description,"description"));
+ if(task.instructions)card.appendChild(el("div",task.instructions,"instructions"));
+ const meta=document.createElement("div");meta.className="meta";
+ meta.append(el("span","Reward: "+Number(task.reward_amount).toFixed(3)+" EMPC","reward"));
+ meta.append(el("span","Deadline: "+dateText(task.deadline_at)));
+ card.appendChild(meta);
+ const area=document.createElement("div");area.className="submission";
+ if(submission){
+  const state=el("div","Submission: "+submission.status.toUpperCase(),"state "+submission.status);
+  area.appendChild(state);
+  if(submission.submitted_at)area.appendChild(el("div","Submitted: "+dateText(submission.submitted_at),"state"));
+  if(submission.review_note)area.appendChild(el("div","Administrator note: "+submission.review_note,"state"));
+  if(submission.status==="approved")area.appendChild(el("div","Reward approved. Check your EMPC Wallet for the credited transaction.","state approved"));
+  if(submission.status==="rejected")area.appendChild(el("div","This submission was rejected. Contact the administrator if you need guidance.","state rejected"));
+ }else{
+  const form=document.createElement("form");
+  const textLabel=el("label","Work details / proof (required)");const proofText=document.createElement("textarea");proofText.maxLength=5000;proofText.placeholder="Describe the completed work or provide proof details…";proofText.required=true;
+  const urlLabel=el("label","Proof link (optional)");const proofUrl=document.createElement("input");proofUrl.type="url";proofUrl.placeholder="https://…";
+  const submit=el("button","SUBMIT FOR REVIEW","submit");submit.type="submit";
+  form.append(textLabel,proofText,urlLabel,proofUrl,submit);
+  form.addEventListener("submit",async event=>{
+   event.preventDefault();submit.disabled=true;submit.textContent="SUBMITTING…";
+   const {data:{user}}=await db.auth.getUser();
+   const {error}=await db.from("staff_task_submissions").insert({
+    task_id:task.id,staff_user_id:user.id,
+    proof_text:proofText.value.trim()||null,
+    proof_url:proofUrl.value.trim()||null
+   });
+   if(error){submit.disabled=false;submit.textContent="SUBMIT FOR REVIEW";say(error.code==="23505"?"You have already submitted this task.":"Submission failed: "+error.message);return}
+   say("Your task proof was submitted successfully. The administrator will review it.");
+   loadTasks();
+  });
+  area.appendChild(form);
+ }
+ card.appendChild(area);return card;
+}
+async function loadTasks(){
+ const {data:tasks,error}=await db.from("staff_tasks").select("id,title,description,instructions,reward_amount,deadline_at").eq("status","published").or("deadline_at.is.null,deadline_at.gt."+new Date().toISOString()).order("created_at",{ascending:false});
+ if(error){say("Could not load available tasks: "+error.message);return}
+ const {data:subs,error:subError}=await db.from("staff_task_submissions").select("id,task_id,status,submitted_at,review_note").order("submitted_at",{ascending:false});
+ if(subError){say("Could not load your submissions: "+subError.message);return}
+ const root=$("taskList");root.replaceChildren();
+ if(!tasks||tasks.length===0){root.appendChild(el("div","There are no available tasks at the moment.","empty"));say("Your staff account is active. Check again later for new tasks.");return}
+ const byTask=new Map((subs||[]).map(s=>[s.task_id,s]));
+ tasks.forEach(task=>root.appendChild(renderTask(task,byTask.get(task.id))));
+ say("Your available tasks are loaded.");
+}
+async function init(){
+ const {data:{session},error}=await db.auth.getSession();
+ if(error||!session){location.replace("staff-login.html");return}
+ const {data:profile,error:profileError}=await db.from("staff_profiles").select("status").eq("user_id",session.user.id).maybeSingle();
+ if(profileError){say("Could not verify staff access: "+profileError.message);return}
+ if(!profile){say("This account has no official staff profile. Contact the administrator for an invitation.");return}
+ if(profile.status!=="active"){say("Your staff account is not active yet. Tasks become available after staff activation.");return}
+ await loadTasks();
+}
+$("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
+init();
+</script>
+</body>
+</html>

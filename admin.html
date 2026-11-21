@@ -16,7 +16,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
 <main>
  <div class="welcome"><div><h1>Administration</h1><p class="muted" id="adminEmail">Verifying administrator…</p></div><p id="status">Loading secure session…</p></div>
  <nav class="tabs" aria-label="Admin sections">
-  <button class="tab active" data-tab="overview">Overview</button><button class="tab" data-tab="social">Social Links</button><button class="tab" data-tab="token">Token Info</button><button class="tab" data-tab="users">Users</button>
+  <button class="tab active" data-tab="overview">Overview</button><button class="tab" data-tab="social">Social Links</button><button class="tab" data-tab="token">Token Info</button><button class="tab" data-tab="users">Users</button><button class="tab" data-tab="staff">Staff</button>
  </nav>
  <section id="overview" class="tab-panel">
   <div class="cards">
@@ -73,6 +73,14 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
    <div class="table-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Account status</th><th>Email verified</th><th>Registered</th><th>Last sign-in</th><th>Account action</th></tr></thead><tbody id="usersBody"><tr><td colspan="7" class="empty">Open this tab or refresh to load users.</td></tr></tbody></table></div>
    <div class="actions" style="margin-top:14px;align-items:center"><button id="usersPrev">Previous</button><span id="usersPage" class="muted">Page 1</span><button id="usersNext">Next</button></div>
    <div class="note" style="margin-top:16px">Admins can suspend or reactivate regular user accounts. Admin accounts are protected. No passwords, tokens, or secret credentials are displayed.</div>
+  </div>
+ </section>
+ <section id="staff" class="tab-panel hidden-panel">
+  <div class="panel">
+   <div class="section-head"><div><h2>Official staff management</h2><p class="muted">Review registered official staff profiles and manage their access status.</p></div><button id="refreshStaff">Refresh staff</button></div>
+   <p id="staffMessage" class="muted" aria-live="polite">Loading staff profiles…</p>
+   <div class="table-wrap"><table><thead><tr><th>Staff name</th><th>User ID</th><th>Referral code</th><th>Status</th><th>Wallet verification</th><th>Fee</th><th>Actions</th></tr></thead><tbody id="staffBody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table></div>
+   <div class="note" style="margin-top:16px">Security: Telegram sign-in alone does not grant staff privileges. Staff activation and the 100 EMPC referral reward must only occur after server-verified TON wallet ownership and the required 0.5 TON fee payment. Do not activate staff manually from this screen.</div>
   </div>
  </section>
 </main>
@@ -218,11 +226,48 @@ async function changeUserStatus(userId,action){
   if(!response.ok)throw new Error(result.error||("Request failed ("+response.status+")"));
   msg.textContent=action==="suspend"?"Account suspended.":"Account reactivated.";
   await loadUsers();
+  await loadStaff();
  }catch(e){msg.textContent="Could not change account status: "+(e.message||"Unknown error");}
 }
 document.getElementById("refreshUsers").addEventListener("click",loadUsers);
 document.getElementById("usersPrev").addEventListener("click",()=>{if(usersPage>1){usersPage--;loadUsers();}});
 document.getElementById("usersNext").addEventListener("click",()=>{if(usersHasNext){usersPage++;loadUsers();}});
+
+async function loadStaff(){
+ const body=document.getElementById("staffBody"),msg=document.getElementById("staffMessage");
+ msg.textContent="Loading official staff profiles…";
+ body.innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
+ try{
+  const {data,error}=await db.from("staff_profiles").select("user_id,display_name,referral_code,referred_by,status,ton_wallet_address,wallet_verified_at,verification_fee_status,created_at").order("created_at",{ascending:false});
+  if(error)throw error;
+  if(!data?.length){body.innerHTML='<tr><td colspan="7" class="empty">No official staff profiles found.</td></tr>';msg.textContent="0 staff profiles.";return;}
+  body.innerHTML=data.map(x=>{
+   const verified=x.wallet_verified_at&&x.ton_wallet_address;
+   const wallet=verified?"Verified · "+esc(x.ton_wallet_address):"Not verified";
+   const actions=x.status==="active"
+    ?'<button class="danger" data-staff-action="suspend" data-staff-id="'+esc(x.user_id)+'">Suspend</button>'
+    :'<button data-staff-action="restore" data-staff-id="'+esc(x.user_id)+'">Restore to invited</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>';
+   return '<tr><td>'+esc(x.display_name)+'</td><td><small>'+esc(x.user_id)+'</small></td><td>'+esc(x.referral_code)+'</td><td><span class="pill '+(x.status==="active"?"visible":(x.status==="suspended"||x.status==="rejected"?"hidden":""))+'">'+esc(x.status)+'</span></td><td>'+wallet+'</td><td>'+esc(x.verification_fee_status)+'</td><td><div class="actions">'+actions+'</div></td></tr>';
+  }).join("");
+  body.querySelectorAll("[data-staff-action]").forEach(b=>b.addEventListener("click",()=>changeStaffStatus(b.dataset.staffId,b.dataset.staffAction)));
+  msg.textContent="Showing "+data.length+" official staff profile(s).";
+ }catch(e){
+  body.innerHTML='<tr><td colspan="7" class="empty">'+esc(e.message||"Could not load staff profiles.")+'</td></tr>';
+  msg.textContent="Staff profiles could not be loaded.";
+ }
+}
+async function changeStaffStatus(userId,action){
+ const next=action==="suspend"?"suspended":action==="reject"?"rejected":"invited";
+ const label=action==="suspend"?"suspend":action==="reject"?"reject":"restore to invited";
+ if(!confirm("Are you sure you want to "+label+" this staff profile?"))return;
+ const msg=document.getElementById("staffMessage");
+ msg.textContent="Updating staff status…";
+ const {error}=await db.from("staff_profiles").update({status:next,updated_at:new Date().toISOString()}).eq("user_id",userId);
+ if(error){msg.textContent="Could not update staff status: "+error.message;return;}
+ msg.textContent="Staff status updated.";
+ await loadStaff();
+}
+document.getElementById("refreshStaff").addEventListener("click",loadStaff);
 
 async function start(){
  try{

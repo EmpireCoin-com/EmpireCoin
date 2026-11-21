@@ -158,7 +158,8 @@ async function start(){
   document.getElementById("adminEmail").textContent=user.email||"Administrator";
   statusEl.textContent="Administrator verified.";
   logout.hidden=false;logout.addEventListener("click",async()=>{await db.auth.signOut();location.replace("login.html");});
-  await loadLinks();\n  await loadTokenSettings();
+  await loadLinks();
+  await loadTokenSettings();
  }catch(e){statusEl.textContent="Dashboard error: "+(e.message||"Please refresh and try again.");}
 }
 start();

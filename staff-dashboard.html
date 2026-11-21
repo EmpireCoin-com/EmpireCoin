@@ -26,10 +26,10 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <p id="welcome">Loading your secure staff profile…</p>
 <div id="message" role="status" aria-live="polite">Verifying your account…</div>
 <section class="grid hidden" id="dashboard">
-<div class="card"><div class="label">Staff name</div><div class="value" id="name">—</div><div class="status" id="status">—</div></div>
+<div class="card" id="profile"><div class="label">Staff name</div><div class="value" id="name">—</div><div class="status" id="status">—</div></div>
 <div class="card"><div class="label">Staff registration</div><div class="value" id="created">—</div><div class="note">Your official staff profile record.</div></div>
 <div class="card wide"><div class="label">Your personal referral code</div><div class="code" id="referral">—</div><button class="copy" id="copy">COPY REFERRAL CODE</button><div class="note">Share this code with a person you invite to official EmpireCoin staff registration. Referral rewards are issued only after wallet ownership and the company fee are verified.</div></div>
-<div class="card wide"><div class="label">Internal EMPC wallet</div><div class="value">Not activated</div><div class="walletbox">Your internal EMPC balance and transaction history will appear here after the secure wallet ledger is enabled. This balance is separate from TON blockchain assets.</div></div>
+<div class="card wide" id="wallet"><div class="label">Internal EMPC wallet</div><div class="value">Not activated</div><div class="walletbox">Your internal EMPC balance and transaction history will appear here after the secure wallet ledger is enabled. This balance is separate from TON blockchain assets.</div></div>
 <div class="card wide"><div class="label">TON blockchain wallet</div><div class="value">Not connected</div><div class="walletbox">Connect your own TON wallet in the next setup step. Never enter or share a seed phrase or private key. Wallet ownership will be verified with a signed challenge.</div></div>
 <div class="card wide"><div class="label">Verification & activation</div><div class="value" id="fee">Unpaid</div><p>Wallet verification and any fee process are not active yet. EMPC currently operates on TON Testnet; no real 0.5 TON payment will be requested at this stage.</p></div>
 </section>

@@ -69,7 +69,7 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
 
  <section id="mining" class="tab-panel hidden-panel">
   <div class="panel">
-   <div class="section-head"><div><h2>EMPC Mining Pool</h2><p class="muted">Manage the dedicated 5% allocation. Opening Mining allows eligible active staff to start 24-hour cycles.</p></div><button id="toggleMining" class="primary" type="button">Loading…</button></div>
+   <div class="section-head"><div><h2>EMPC Mining Pool</h2><p class="muted">Manage the dedicated 5% allocation. Opening Mining allows eligible active staff to start 24-hour cycles.</p></div><div class="actions"><button id="testTelegramMining" type="button">Test Telegram Connection</button><button id="toggleMining" class="primary" type="button">Loading…</button></div></div><p id="telegramMiningTest" class="muted" aria-live="polite">Telegram verification has not been tested yet.</p>
    <p id="miningAdminStatus" class="muted" aria-live="polite">Loading secure Mining settings…</p>
    <div class="cards">
     <div class="stat"><small>Total Mining allocation</small><strong id="adminMiningAllocation">—</strong></div>
@@ -222,6 +222,22 @@ async function miningAdminApi(payload){
  if(!response.ok)throw new Error(result.error||"Mining administration request failed.");
  return result;
 }
+document.getElementById("testTelegramMining").addEventListener("click",async()=>{
+ const button=document.getElementById("testTelegramMining"),resultEl=document.getElementById("telegramMiningTest");
+ button.disabled=true;resultEl.textContent="Testing Telegram bot token and official channel access…";
+ try{
+  const result=await miningAdminApi({action:"admin_test_telegram_connection"});
+  if(!result.bot_connected)throw new Error(result.error||"Telegram bot connection failed.");
+  if(!result.membership_checked){
+   resultEl.textContent="Bot connected as @"+result.bot_username+", but membership was not checked: "+result.message;
+  }else if(result.is_member){
+   resultEl.textContent="SUCCESS · Bot @"+result.bot_username+" connected; channel "+result.channel+" is reachable; linked Telegram account membership verified ("+result.membership_status+").";
+  }else{
+   resultEl.textContent="Bot connected and channel lookup works, but linked account is not a member ("+result.membership_status+"). Join the official channel with the Telegram account linked to this admin profile.";
+  }
+ }catch(e){resultEl.textContent="Telegram test failed: "+(e.message||"Unknown error");}
+ finally{button.disabled=false}
+});
 function miningAdminAmount(value){return Number(value||0).toLocaleString(undefined,{maximumFractionDigits:3})+" EMPC"}
 async function loadMiningAdmin(){
  const msg=document.getElementById("miningAdminStatus"),body=document.getElementById("miningRulesBody");

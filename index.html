@@ -66,9 +66,35 @@
       <div class="roadmap"><article><span>PHASE 01</span><h3>Foundation</h3><p>Token creation, supply distribution planning and core project identity.</p><b class="status">FOUNDATION STAGE</b></article><article><span>PHASE 02</span><h3>Transparency</h3><p>Official website, token information, wallet references and public updates.</p><b class="status">IN PROGRESS</b></article><article><span>PHASE 03</span><h3>Community</h3><p>Community growth, participation initiatives and ecosystem planning.</p><b class="status">PLANNED</b></article><article><span>PHASE 04</span><h3>Ecosystem</h3><p>Explore utility, partnerships and future ecosystem development.</p><b class="status">PLANNED</b></article></div>
     </div></section>
 
-    <section class="community-section section-wrap" id="community"><div class="community-card"><div class="section-kicker">05 / BE PART OF IT</div><h2>The next chapter<br><em>starts together.</em></h2><p>Follow official EmpireCoin announcements and community channels. Official links will be published here after verification.</p><span class="coming-soon">COMMUNITY LINKS COMING SOON</span></div></section>
+    <section class="community-section section-wrap" id="community"><div class="community-card"><div class="section-kicker">05 / BE PART OF IT</div><h2>The next chapter<br><em>starts together.</em></h2><p>Follow official EmpireCoin announcements and community channels.</p><div id="officialSocialLinks" class="official-social-links"><span class="coming-soon">LOADING OFFICIAL LINKS…</span></div></div></section>
   </main>
   <footer class="site-footer"><a class="brand" href="#home"><img class="brand-logo" src="https://i.ibb.co/Cpy4zkWD/file-0000000027fc8210929d310091b874ef.png" alt="EmpireCoin official logo" width="48" height="48" style="display:block;width:48px;height:48px;max-width:48px;max-height:48px;min-width:48px;object-fit:contain;flex:0 0 48px;"><span>EMPIRE<span class="brand-gold">COIN</span><small>THE EMPIRE ECOSYSTEM</small></span></a><p>© 2026 EmpireCoin. Built with a long-term vision.</p><a href="#home">Back to top ↑</a></footer>
   <script src="script.js"></script>
-</body>
+
+  <script>
+  (async function loadOfficialSocialLinks(){
+    const root=document.getElementById("officialSocialLinks");
+    if(!root)return;
+    const supabaseUrl="https://wytdpyvzbrvzlymifpjq.supabase.co";
+    const publishableKey="sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk";
+    function loadSdk(src){return new Promise((resolve,reject)=>{const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=()=>{s.remove();reject(new Error("SDK load failed"));};document.head.appendChild(s);});}
+    try{
+      try{await loadSdk("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");}
+      catch(e){await loadSdk("https://unpkg.com/@supabase/supabase-js@2");}
+      if(!window.supabase?.createClient)throw new Error("Supabase unavailable");
+      const db=window.supabase.createClient(supabaseUrl,publishableKey);
+      const {data,error}=await db.from("social_links").select("platform,label,url").eq("is_visible",true).order("sort_order",{ascending:true});
+      if(error)throw error;
+      root.replaceChildren();
+      if(!data?.length){const empty=document.createElement("span");empty.className="coming-soon";empty.textContent="OFFICIAL LINKS COMING SOON";root.appendChild(empty);return;}
+      data.forEach(item=>{
+        let parsed;try{parsed=new URL(item.url);}catch(e){return;}
+        if(!["https:","http:"].includes(parsed.protocol))return;
+        const a=document.createElement("a");a.className="button button-gold";a.href=parsed.href;a.target="_blank";a.rel="noopener noreferrer";a.textContent=item.label||item.platform;root.appendChild(a);
+      });
+      if(!root.children.length)root.textContent="Official links are currently unavailable.";
+    }catch(e){root.textContent="Official community links are temporarily unavailable.";}
+  })();
+  </script>
+ </body>
 </html>

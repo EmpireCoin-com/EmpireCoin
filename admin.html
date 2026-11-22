@@ -504,9 +504,9 @@ async function changeStaffStatus(userId,action){
 
 document.getElementById("refreshStaff").addEventListener("click",loadStaff);
 
-let editingTaskId=null;
+let editingTaskId=null,editingTaskOriginalStatus=null,editingTaskOriginalDeadline=null;
 function clearTaskForm(){
- editingTaskId=null;
+ editingTaskId=null;editingTaskOriginalStatus=null;editingTaskOriginalDeadline=null;
  ["taskTitle","taskReward","taskBoostPercent","taskDescription","taskInstructions"].forEach(id=>document.getElementById(id).value="");
  document.getElementById("taskType").value="direct_reward";
  document.getElementById("taskType").disabled=false;
@@ -519,7 +519,7 @@ function clearTaskForm(){
  document.getElementById("taskFormMessage").textContent="";
 }
 function editTask(task){
- editingTaskId=task.id;
+ editingTaskId=task.id;editingTaskOriginalStatus=task.status;editingTaskOriginalDeadline=task.deadline_at||null;
  document.getElementById("taskTitle").value=task.title||"";
  document.getElementById("taskType").value=task.task_type||"direct_reward";
  document.getElementById("taskType").disabled=true;
@@ -554,7 +554,8 @@ async function saveStaffTask(){
  if(taskType==="mining_boost"&&(!Number.isFinite(boost)||boost<=0||boost>100)){msg.textContent="Mining boost must be greater than 0 and no more than 100%.";return;}
  if(!["direct_reward","mining_boost"].includes(taskType)||!["draft","published","paused","closed"].includes(status)){msg.textContent="Choose valid task settings.";return;}
  const now=new Date();
- const deadline_at=status==="published"?new Date(now.getTime()+duration*60*60*1000).toISOString():null;
+ const keepExistingPublishedDeadline=Boolean(editingTaskId&&editingTaskOriginalStatus==="published"&&status==="published");
+ const deadline_at=status==="published"?(keepExistingPublishedDeadline?editingTaskOriginalDeadline:new Date(now.getTime()+duration*60*60*1000).toISOString()):null;
  const payload={title,description,instructions:instructions||null,task_type:taskType,reward_amount:taskType==="direct_reward"?reward:0,boost_percent:taskType==="mining_boost"?boost:0,active_duration_hours:duration,status,deadline_at,updated_at:now.toISOString()};
  if(status==="published")payload.published_at=now.toISOString();
  if(!confirm((editingTaskId?"Save changes to":"Create")+" this staff task?"))return;

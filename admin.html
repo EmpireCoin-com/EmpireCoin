@@ -509,6 +509,7 @@ function clearTaskForm(){
  editingTaskId=null;
  ["taskTitle","taskReward","taskBoostPercent","taskDescription","taskInstructions"].forEach(id=>document.getElementById(id).value="");
  document.getElementById("taskType").value="direct_reward";
+ document.getElementById("taskType").disabled=false;
  document.getElementById("taskDurationHours").value="24";
  document.getElementById("taskStatus").value="draft";
  toggleTaskTypeFields();
@@ -521,6 +522,7 @@ function editTask(task){
  editingTaskId=task.id;
  document.getElementById("taskTitle").value=task.title||"";
  document.getElementById("taskType").value=task.task_type||"direct_reward";
+ document.getElementById("taskType").disabled=true;
  document.getElementById("taskReward").value=task.reward_amount||"";
  document.getElementById("taskBoostPercent").value=task.boost_percent||50;
  document.getElementById("taskDurationHours").value=task.active_duration_hours||24;

@@ -111,8 +111,10 @@ main{max-width:1120px;margin:28px auto}.welcome{display:flex;justify-content:spa
     <h3 id="taskFormTitle">Create a staff task</h3>
     <div class="form-grid">
      <div class="field"><label for="taskTitle">Task title</label><input id="taskTitle" maxlength="160" placeholder="Enter task title"></div>
-     <div class="field"><label for="taskReward">Reward (EMPC)</label><input id="taskReward" type="number" min="0.000000001" max="100000000" step="0.000000001" placeholder="e.g. 100"></div>
-     <div class="field"><label for="taskDeadline">Optional deadline</label><input id="taskDeadline" type="datetime-local"></div>
+     <div class="field"><label for="taskType">Task type</label><select id="taskType"><option value="direct_reward">Temporary direct EMPC reward</option><option value="mining_boost">Mining reward boost</option></select></div>
+     <div class="field" id="taskRewardField"><label for="taskReward">Direct reward (EMPC)</label><input id="taskReward" type="number" min="0.000000001" max="100000000" step="0.000000001" placeholder="e.g. 5"></div>
+     <div class="field" id="taskBoostField" hidden><label for="taskBoostPercent">Mining boost (%)</label><input id="taskBoostPercent" type="number" min="1" max="100" step="0.01" value="50" placeholder="e.g. 50"></div>
+     <div class="field"><label for="taskDurationHours">Active duration (1–24 hours)</label><input id="taskDurationHours" type="number" min="1" max="24" step="1" value="24"></div>
      <div class="field"><label for="taskStatus">Task status</label><select id="taskStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="paused">Paused</option><option value="closed">Closed</option></select></div>
     </div>
     <div class="field" style="margin-top:12px"><label for="taskDescription">Description</label><textarea id="taskDescription" rows="3" maxlength="5000" style="width:100%;padding:11px;background:#081a2c;color:var(--text);border:1px solid var(--line);border-radius:5px" placeholder="Explain what the task is about"></textarea></div>
@@ -505,8 +507,11 @@ document.getElementById("refreshStaff").addEventListener("click",loadStaff);
 let editingTaskId=null;
 function clearTaskForm(){
  editingTaskId=null;
- ["taskTitle","taskReward","taskDeadline","taskDescription","taskInstructions"].forEach(id=>document.getElementById(id).value="");
+ ["taskTitle","taskReward","taskBoostPercent","taskDescription","taskInstructions"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("taskType").value="direct_reward";
+ document.getElementById("taskDurationHours").value="24";
  document.getElementById("taskStatus").value="draft";
+ toggleTaskTypeFields();
  document.getElementById("taskFormTitle").textContent="Create a staff task";
  document.getElementById("saveTask").textContent="Create task";
  document.getElementById("cancelTaskEdit").hidden=true;
@@ -515,11 +520,14 @@ function clearTaskForm(){
 function editTask(task){
  editingTaskId=task.id;
  document.getElementById("taskTitle").value=task.title||"";
- document.getElementById("taskReward").value=task.reward_amount;
+ document.getElementById("taskType").value=task.task_type||"direct_reward";
+ document.getElementById("taskReward").value=task.reward_amount||"";
+ document.getElementById("taskBoostPercent").value=task.boost_percent||50;
+ document.getElementById("taskDurationHours").value=task.active_duration_hours||24;
+ toggleTaskTypeFields();
  document.getElementById("taskDescription").value=task.description||"";
  document.getElementById("taskInstructions").value=task.instructions||"";
  document.getElementById("taskStatus").value=task.status;
- document.getElementById("taskDeadline").value=task.deadline_at?new Date(task.deadline_at).toISOString().slice(0,16):"";
  document.getElementById("taskFormTitle").textContent="Edit staff task";
  document.getElementById("saveTask").textContent="Save changes";
  document.getElementById("cancelTaskEdit").hidden=false;
@@ -531,18 +539,22 @@ async function saveStaffTask(){
  const title=document.getElementById("taskTitle").value.trim();
  const description=document.getElementById("taskDescription").value.trim();
  const instructions=document.getElementById("taskInstructions").value.trim();
+ const taskType=document.getElementById("taskType").value;
  const rewardRaw=document.getElementById("taskReward").value.trim();
  const reward=Number(rewardRaw);
+ const boostRaw=document.getElementById("taskBoostPercent").value.trim();
+ const boost=Number(boostRaw);
+ const duration=Number(document.getElementById("taskDurationHours").value);
  const status=document.getElementById("taskStatus").value;
- const deadlineRaw=document.getElementById("taskDeadline").value;
  if(title.length<3||title.length>160||!description){msg.textContent="Enter a title (3–160 characters) and a description.";return;}
- if(!/^\d+(\.\d{1,9})?$/.test(rewardRaw)||!Number.isFinite(reward)||reward<=0||reward>100000000){msg.textContent="Enter a valid positive EMPC reward (up to 9 decimal places).";return;}
- if(!["draft","published","paused","closed"].includes(status)){msg.textContent="Choose a valid task status.";return;}
- let deadline_at=null;
- if(deadlineRaw){const d=new Date(deadlineRaw);if(Number.isNaN(d.getTime())){msg.textContent="Check the deadline date and time.";return;}deadline_at=d.toISOString();}
- const payload={title,description,instructions:instructions||null,reward_amount:reward,status,deadline_at,updated_at:new Date().toISOString()};
- if(status==="published"&&!editingTaskId)payload.published_at=new Date().toISOString();
- if(status==="published"&&editingTaskId)payload.published_at=new Date().toISOString();
+ if(!Number.isInteger(duration)||duration<1||duration>24){msg.textContent="Active duration must be from 1 to 24 hours.";return;}
+ if(taskType==="direct_reward"&&(!/^\d+(\.\d{1,9})?$/.test(rewardRaw)||!Number.isFinite(reward)||reward<=0||reward>100000000)){msg.textContent="Enter a valid positive EMPC reward (up to 9 decimal places).";return;}
+ if(taskType==="mining_boost"&&(!Number.isFinite(boost)||boost<=0||boost>100)){msg.textContent="Mining boost must be greater than 0 and no more than 100%.";return;}
+ if(!["direct_reward","mining_boost"].includes(taskType)||!["draft","published","paused","closed"].includes(status)){msg.textContent="Choose valid task settings.";return;}
+ const now=new Date();
+ const deadline_at=status==="published"?new Date(now.getTime()+duration*60*60*1000).toISOString():null;
+ const payload={title,description,instructions:instructions||null,task_type:taskType,reward_amount:taskType==="direct_reward"?reward:0,boost_percent:taskType==="mining_boost"?boost:0,active_duration_hours:duration,status,deadline_at,updated_at:now.toISOString()};
+ if(status==="published")payload.published_at=now.toISOString();
  if(!confirm((editingTaskId?"Save changes to":"Create")+" this staff task?"))return;
  msg.textContent="Saving task…";
  try{
@@ -565,7 +577,7 @@ async function loadStaffTasks(){
   const {data,error}=await db.from("staff_tasks").select("*").order("created_at",{ascending:false}).limit(200);
   if(error)throw error;
   if(!data?.length){body.innerHTML='<tr><td colspan="6" class="empty">No tasks created yet. Use the form above to create the first task.</td></tr>';msg.textContent="0 tasks.";return;}
-  body.innerHTML=data.map(t=>'<tr><td><strong>'+esc(t.title)+'</strong><br><small>'+esc((t.description||"").slice(0,140))+'</small></td><td>'+Number(t.reward_amount).toFixed(9)+' EMPC</td><td>'+esc(formatDate(t.deadline_at))+'</td><td><span class="pill '+(t.status==="published"?"visible":(t.status==="closed"?"hidden":""))+'">'+esc(t.status)+'</span></td><td>'+esc(formatDate(t.created_at))+'</td><td><div class="actions"><button data-task-edit="'+esc(t.id)+'">Edit</button><button data-task-publish="'+esc(t.id)+'" data-task-next="'+(t.status==="published"?"paused":"published")+'">'+(t.status==="published"?"Pause":"Publish")+'</button><button data-task-close="'+esc(t.id)+'" class="danger">Close</button></div></td></tr>').join("");
+  body.innerHTML=data.map(t=>'<tr><td><strong>'+esc(t.title)+'</strong><br><small>'+esc((t.description||"").slice(0,140))+'</small></td><td>'+(t.task_type==="mining_boost"?"Mining +"+Number(t.boost_percent).toFixed(2)+"%":"Direct "+Number(t.reward_amount).toFixed(9)+" EMPC")+'</td><td>'+esc(formatDate(t.deadline_at))+'</td><td><span class="pill '+(t.status==="published"?"visible":(t.status==="closed"?"hidden":""))+'">'+esc(t.status)+'</span></td><td>'+esc(formatDate(t.created_at))+'</td><td><div class="actions"><button data-task-edit="'+esc(t.id)+'">Edit</button><button data-task-publish="'+esc(t.id)+'" data-task-next="'+(t.status==="published"?"paused":"published")+'">'+(t.status==="published"?"Pause":"Publish")+'</button><button data-task-close="'+esc(t.id)+'" class="danger">Close</button></div></td></tr>').join("");
   body.querySelectorAll("[data-task-edit]").forEach(b=>b.addEventListener("click",()=>editTask(data.find(t=>t.id===b.dataset.taskEdit))));
   body.querySelectorAll("[data-task-publish]").forEach(b=>b.addEventListener("click",()=>changeTaskStatus(b.dataset.taskPublish,b.dataset.taskNext)));
   body.querySelectorAll("[data-task-close]").forEach(b=>b.addEventListener("click",()=>changeTaskStatus(b.dataset.taskClose,"closed")));
@@ -575,7 +587,11 @@ async function loadStaffTasks(){
 async function changeTaskStatus(id,next){
  if(!confirm("Change this task status to "+next+"?"))return;
  const payload={status:next,updated_at:new Date().toISOString()};
- if(next==="published")payload.published_at=new Date().toISOString();
+ if(next==="published"){
+  const {data:task,error:taskError}=await db.from("staff_tasks").select("active_duration_hours").eq("id",id).single();
+  if(taskError){document.getElementById("tasksMessage").textContent="Could not load task duration: "+taskError.message;return;}
+  const now=new Date();payload.published_at=now.toISOString();payload.deadline_at=new Date(now.getTime()+Number(task.active_duration_hours||24)*60*60*1000).toISOString();
+ }
  const {error}=await db.from("staff_tasks").update(payload).eq("id",id);
  if(error){document.getElementById("tasksMessage").textContent="Could not update task: "+error.message;return;}
  await loadStaffTasks();
@@ -589,7 +605,7 @@ async function loadTaskSubmissions(){
   if(!subs?.length){body.innerHTML='<tr><td colspan="6" class="empty">No task submissions yet.</td></tr>';msg.textContent="0 submissions.";return;}
   const taskIds=[...new Set(subs.map(s=>s.task_id))],staffIds=[...new Set(subs.map(s=>s.staff_user_id))];
   const [{data:tasks,error:te},{data:staff,error:se}]=await Promise.all([
-   db.from("staff_tasks").select("id,title,reward_amount").in("id",taskIds),
+   db.from("staff_tasks").select("id,title,reward_amount,task_type,boost_percent").in("id",taskIds),
    db.from("staff_profiles").select("user_id,display_name").in("user_id",staffIds)
   ]);
   if(te)throw te;if(se)throw se;
@@ -601,8 +617,10 @@ async function loadTaskSubmissions(){
    let proofLink="";
    if(s.proof_url&&/^https?:\/\//i.test(s.proof_url))proofLink='<p><a href="'+esc(s.proof_url)+'" target="_blank" rel="noopener noreferrer">Open submitted proof</a></p>';
    const note=s.review_note||"";
-   const actions=s.status==="pending"?'<div class="field"><input aria-label="Review note" data-review-note="'+esc(s.id)+'" maxlength="1000" placeholder="Optional review note"></div><div class="actions" style="margin-top:7px"><button class="primary" data-review="'+esc(s.id)+'" data-decision="approve">Approve &amp; reward</button><button class="danger" data-review="'+esc(s.id)+'" data-decision="reject">Reject</button></div>':(s.status==="approved"?"Reward processed":"Reviewed");
-   return '<tr><td><strong>'+esc(task?.title||"Task unavailable")+'</strong><br><small>'+esc(person?.display_name||s.staff_user_id)+'</small><br><small>'+Number(task?.reward_amount||0).toFixed(9)+' EMPC reward</small></td><td>'+proofText+proofLink+'</td><td>'+esc(formatDate(s.submitted_at))+'</td><td><span class="pill '+(s.status==="approved"?"visible":(s.status==="rejected"?"hidden":""))+'">'+esc(s.status)+'</span></td><td>'+esc(note)+'</td><td>'+actions+'</td></tr>';
+   const approvalLabel=task?.task_type==="mining_boost"?"Approve boost":"Approve &amp; reward";
+   const rewardLabel=task?.task_type==="mining_boost"?"Mining boost +"+Number(task?.boost_percent||0).toFixed(2)+"%":Number(task?.reward_amount||0).toFixed(9)+" EMPC reward";
+   const actions=s.status==="pending"?'<div class="field"><input aria-label="Review note" data-review-note="'+esc(s.id)+'" maxlength="1000" placeholder="Optional review note"></div><div class="actions" style="margin-top:7px"><button class="primary" data-review="'+esc(s.id)+'" data-decision="approve">'+approvalLabel+'</button><button class="danger" data-review="'+esc(s.id)+'" data-decision="reject">Reject</button></div>':(s.status==="approved"?(task?.task_type==="mining_boost"?"Boost activated":"Reward processed"):"Reviewed");
+   return '<tr><td><strong>'+esc(task?.title||"Task unavailable")+'</strong><br><small>'+esc(person?.display_name||s.staff_user_id)+'</small><br><small>'+rewardLabel+'</small></td><td>'+proofText+proofLink+'</td><td>'+esc(formatDate(s.submitted_at))+'</td><td><span class="pill '+(s.status==="approved"?"visible":(s.status==="rejected"?"hidden":""))+'">'+esc(s.status)+'</span></td><td>'+esc(note)+'</td><td>'+actions+'</td></tr>';
   }).join("");
   body.querySelectorAll("[data-review]").forEach(b=>b.addEventListener("click",()=>reviewStaffTask(b.dataset.review,b.dataset.decision)));
   msg.textContent="Showing "+subs.length+" submission(s). Pending reviews: "+subs.filter(s=>s.status==="pending").length+".";
@@ -612,7 +630,7 @@ async function reviewStaffTask(submissionId,decision){
  const noteInput=document.querySelector('[data-review-note="'+CSS.escape(submissionId)+'"]');
  const review_note=noteInput?.value.trim()||"";
  const action=decision==="approve"?"approve and credit the task reward":"reject";
- if(!confirm("Are you sure you want to "+action+" for this submission?"+(decision==="approve"?" The reward will be credited once to the staff internal EMPC wallet.":"")))return;
+ if(!confirm("Are you sure you want to "+action+" for this submission?"+(decision==="approve"?" Direct-reward tasks credit EMPC once; Mining boost tasks activate a bonus without a direct wallet credit.":"")))return;
  const msg=document.getElementById("submissionsMessage");msg.textContent="Submitting review securely…";
  try{
   const session=await getAdminSession();
@@ -624,10 +642,17 @@ async function reviewStaffTask(submissionId,decision){
   const result=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(result.error||result.message||("Request failed (HTTP "+response.status+")"));
   const outcome=result.result||result.data||result;
-  msg.textContent=outcome.duplicate?"This submission was already reviewed; no second reward was issued.":(decision==="approve"?"Submission approved. Reward credited: "+Number(outcome.reward||0).toFixed(9)+" EMPC.":"Submission rejected.");
+  msg.textContent=outcome.duplicate?"This submission was already reviewed; no second reward was issued.":(decision==="approve"?(outcome.task_type==="mining_boost"?"Mining boost approved: +"+Number(outcome.boost_percent||0).toFixed(2)+"% on the next eligible 24-hour cycle.":"Submission approved. Reward credited: "+Number(outcome.reward||0).toFixed(9)+" EMPC."):"Submission rejected.");
   await loadTaskSubmissions();
  }catch(e){msg.textContent="Review failed: "+(e.message||"Unknown error");}
 }
+function toggleTaskTypeFields(){
+ const boost=document.getElementById("taskType").value==="mining_boost";
+ document.getElementById("taskRewardField").hidden=boost;
+ document.getElementById("taskBoostField").hidden=!boost;
+}
+document.getElementById("taskType").addEventListener("change",toggleTaskTypeFields);
+toggleTaskTypeFields();
 document.getElementById("saveTask").addEventListener("click",saveStaffTask);
 document.getElementById("cancelTaskEdit").addEventListener("click",clearTaskForm);
 document.getElementById("refreshTasks").addEventListener("click",loadStaffTasks);

@@ -53,8 +53,12 @@
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const redirectUrl = new URL("staff-login.html", window.location.href).href;
 
-    function showSession(user) {
+    let registrationTask = null;
+
+    async function showSession(session) {
+      const user = session?.user || null;
       if (!user) {
+        registrationTask = null;
         telegramButton.classList.remove("hidden");
         signOutButton.classList.add("hidden");
         dashboardButton.classList.add("hidden");
@@ -63,15 +67,68 @@
         message.textContent = "Telegram authentication is ready.";
         return;
       }
+
       const meta = user.user_metadata || {};
-      const display = meta.full_name || meta.name || meta.preferred_username || "Telegram user";
+      const display = meta.name || meta.preferred_username || "Telegram user";
       telegramButton.classList.add("hidden");
       signOutButton.classList.remove("hidden");
       dashboardButton.classList.remove("hidden");
       linkBotButton.classList.remove("hidden");
       identity.classList.remove("hidden");
       identity.textContent = "Signed in as: " + display;
-      message.textContent = "Telegram identity verified. Official staff registration is the next step; no staff privileges have been granted.";
+
+      if (registrationTask?.userId === user.id) return registrationTask.promise;
+
+      const task = (async () => {
+        message.textContent = "Verifying Telegram identity and checking staff registration…";
+        try {
+          if (!session?.access_token) throw new Error("Your sign-in session is missing. Please sign in again.");
+          const response = await fetch(SUPABASE_URL + "/functions/v1/staff-register", {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + session.access_token,
+              "apikey": SUPABASE_KEY,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) throw new Error(result.error || "Staff registration could not be checked.");
+
+          if (result.is_admin) {
+            dashboardButton.classList.add("hidden");
+            linkBotButton.classList.add("hidden");
+            message.textContent = "Administrator identity verified. No staff registration is required for this account.";
+            return;
+          }
+
+          dashboardButton.classList.remove("hidden");
+          linkBotButton.classList.remove("hidden");
+          if (result.status === "invited") {
+            message.textContent = result.created
+              ? "Registration submitted successfully. Your account is awaiting administrator approval. Mining, claims and tasks remain locked until approval and activation."
+              : "Your staff registration is awaiting administrator approval. Mining, claims and tasks remain locked until approval and activation.";
+          } else if (result.status === "pending_payment") {
+            message.textContent = "Your staff registration has been approved. Complete the existing wallet verification and activation requirements before using staff rewards.";
+          } else if (result.status === "active") {
+            message.textContent = "Your staff account is active. Open your dashboard to access available features.";
+          } else if (result.status === "rejected") {
+            message.textContent = "Your staff registration was not approved. Please contact the official administrator for clarification.";
+          } else if (result.status === "suspended") {
+            message.textContent = "Your staff account is currently suspended. Please contact the official administrator.";
+          } else {
+            message.textContent = "Telegram identity verified. Staff status: " + result.status + ".";
+          }
+        } catch (error) {
+          message.textContent = (error.message || "Registration check failed.") + " You can retry by refreshing this page.";
+        }
+      })();
+
+      registrationTask = { userId: user.id, promise: task };
+      try { await task; }
+      finally {
+        if (registrationTask?.userId === user.id) registrationTask = null;
+      }
     }
 
     telegramButton.addEventListener("click", async () => {
@@ -129,10 +186,10 @@
 
     db.auth.getSession().then(({ data, error }) => {
       if (error) message.textContent = "Could not check the sign-in session: " + error.message;
-      showSession(data?.session?.user || null);
+      showSession(data?.session || null);
     });
 
-    db.auth.onAuthStateChange((_event, session) => showSession(session?.user || null));
+    db.auth.onAuthStateChange((_event, session) => showSession(session || null));
   </script>
 </body>
 </html>

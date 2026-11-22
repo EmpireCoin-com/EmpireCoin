@@ -7,3 +7,11 @@
 /* Keep the official coin artwork confined to the header corner. */
 .brand{flex-shrink:0}.brand-logo{display:block;width:48px;height:48px;max-width:48px;max-height:48px;min-width:48px;object-fit:contain;flex:0 0 48px}.hero-logo{display:none!important}
 @media(max-width:760px){.brand-logo{width:42px;height:42px;max-width:42px;max-height:42px;min-width:42px;flex-basis:42px}}
+
+
+/* Ensure the public homepage fills the mobile viewport consistently. */
+html,body{width:100%;max-width:100%;min-width:0}
+body{min-height:100vh}
+main,.site-header,.ticker,.site-footer{width:100%;max-width:100%}
+.section-wrap{width:100%;max-width:1160px}
+@media(max-width:760px){.site-header,.ticker,.site-footer,main{width:100vw;max-width:100vw}.section-wrap{width:100%;max-width:100%;}}

@@ -85,7 +85,7 @@ h1{font:600 clamp(28px,6vw,38px) "Playfair Display",serif;margin:8px 0}p{color:v
 <script src="https://unpkg.com/@tonconnect/ui@5.0.3/dist/tonconnect-ui.min.js"></script>
 <script>
 const db=window.supabase.createClient("https://wytdpyvzbrvzlymifpjq.supabase.co","sb_publishable_OkC6Yd_xYZ8IcC-MK2ViVA_JEPJ7iqk");
-const $=id=>document.getElementById(id);let referralCode="";let currentSession=null;let tonConnectUI=null;let proofInFlight=false;let proofChallengeReady=false;
+const $=id=>document.getElementById(id);let referralCode="";let currentSession=null;let tonConnectUI=null;let proofInFlight=false;let proofChallengeReady=false;let savedTonWalletAddress=null;
 function say(t){$("message").textContent=t}
 async function loadInternalWallet(userId){
  const balanceEl=$("internalBalance"),statusEl=$("internalWalletStatus"),historyEl=$("walletTransactions");
@@ -263,7 +263,8 @@ async function submitTonProof(wallet,proof){
    public_key:wallet.account.publicKey,
    proof:{...proof,state_init:wallet.account.walletStateInit}
   });
-  $("tonWalletAddress").textContent=result.address;
+  savedTonWalletAddress=result.address;
+  $("tonWalletAddress").textContent=formatTonAddress(result.address);
   $("tonWalletStatus").textContent="Ownership verified · TON Testnet";
   $("status").textContent=(result.status||"pending_payment").replaceAll("_"," ").toUpperCase();
   $("fee").textContent=(result.verification_fee_status||"unpaid").replaceAll("_"," ").toUpperCase();
@@ -281,8 +282,16 @@ async function submitTonProof(wallet,proof){
   $("verifyTonOwnership").textContent="PREPARE OWNERSHIP VERIFICATION";
  }
 }
-function initTonConnect(){
+function formatTonAddress(raw){
+ let shown=raw||"";
+ try{if(window.TON_CONNECT_UI?.toUserFriendlyAddress)shown=window.TON_CONNECT_UI.toUserFriendlyAddress(raw,true)}catch(_){}
+ return shown;
+}
+function initTonConnect(savedAddress=null){
+ savedTonWalletAddress=savedAddress||null;
  const addressEl=$("tonWalletAddress"),statusEl=$("tonWalletStatus");
+ addressEl.textContent=savedTonWalletAddress?formatTonAddress(savedTonWalletAddress):"Not connected";
+ statusEl.textContent=savedTonWalletAddress?"Ownership verified · TON Testnet · Saved to this staff account":"Wallet ownership not verified";
  if(!window.TON_CONNECT_UI||!window.TON_CONNECT_UI.TonConnectUI){
   statusEl.textContent="TON Connect could not load. Refresh the page and try again.";
   return;
@@ -290,12 +299,13 @@ function initTonConnect(){
  try{
   tonConnectUI=new window.TON_CONNECT_UI.TonConnectUI({
    manifestUrl:"https://empirecoin-com.github.io/EmpireCoin/tonconnect-manifest.json",
-   buttonRootId:"ton-connect"
+   buttonRootId:"ton-connect",
+   restoreConnection:false
   });
   tonConnectUI.onStatusChange(wallet=>{
    if(!wallet){
-    addressEl.textContent="Not connected";
-    if(!proofInFlight)statusEl.textContent="Wallet ownership not verified";
+    addressEl.textContent=savedTonWalletAddress?formatTonAddress(savedTonWalletAddress):"Not connected";
+    if(!proofInFlight)statusEl.textContent=savedTonWalletAddress?"Ownership verified · TON Testnet · Saved to this staff account":"Wallet ownership not verified";
     return;
    }
    const raw=wallet.account.address||"";
@@ -373,6 +383,7 @@ async function init(){
  $("created").textContent=new Date(profile.created_at).toLocaleDateString();
  $("referral").textContent=profile.referral_code;
  $("fee").textContent=profile.verification_fee_status.replaceAll("_"," ").toUpperCase();
+ initTonConnect(profile.ton_wallet_address);
  $("dashboard").classList.remove("hidden");
  await loadInternalWallet(session.user.id);
  await loadMiningStatus();
@@ -381,7 +392,6 @@ async function init(){
 }
 $("copy").addEventListener("click",async()=>{if(!referralCode)return;try{await navigator.clipboard.writeText(referralCode);$("copy").textContent="COPIED";setTimeout(()=>$("copy").textContent="COPY REFERRAL CODE",1800)}catch(e){say("Copy is unavailable in this browser. Your referral code is "+referralCode)}});
 $("signout").addEventListener("click",async()=>{await db.auth.signOut();location.replace("staff-login.html")});
-initTonConnect();
 init();
 </script>
 

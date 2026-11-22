@@ -56,9 +56,10 @@ function renderTask(task,submission){
  card.appendChild(el("h2",task.title));
  card.appendChild(el("div",task.description,"description"));
  if(task.instructions)card.appendChild(el("div",task.instructions,"instructions"));
+ if(task.task_type==="mining_boost")card.appendChild(el("div","When approved, this gives you +"+Number(task.boost_percent).toFixed(2)+"% Mining reward on your next 24-hour cycle. It stays active only while this task is published and before it expires. No direct EMPC is paid for this task.","instructions"));
  const meta=document.createElement("div");meta.className="meta";
- meta.append(el("span","Reward: "+Number(task.reward_amount).toFixed(3)+" EMPC","reward"));
- meta.append(el("span","Deadline: "+dateText(task.deadline_at)));
+ meta.append(el("span",task.task_type==="mining_boost"?"Mining boost: +"+Number(task.boost_percent).toFixed(2)+"%":"Reward: "+Number(task.reward_amount).toFixed(3)+" EMPC","reward"));
+ meta.append(el("span","Expires: "+dateText(task.deadline_at)));
  card.appendChild(meta);
  const area=document.createElement("div");area.className="submission";
  if(submission){
@@ -66,7 +67,7 @@ function renderTask(task,submission){
   area.appendChild(state);
   if(submission.submitted_at)area.appendChild(el("div","Submitted: "+dateText(submission.submitted_at),"state"));
   if(submission.review_note)area.appendChild(el("div","Administrator note: "+submission.review_note,"state"));
-  if(submission.status==="approved")area.appendChild(el("div","Reward approved. Check your EMPC Wallet for the credited transaction.","state approved"));
+  if(submission.status==="approved")area.appendChild(el("div",task.task_type==="mining_boost"?"Mining boost approved. It applies to your next Mining cycle while the task remains active.":"Reward approved. Check your EMPC Wallet for the credited transaction.","state approved"));
   if(submission.status==="rejected")area.appendChild(el("div","This submission was rejected. Contact the administrator if you need guidance.","state rejected"));
  }else{
   const form=document.createElement("form");
@@ -91,7 +92,7 @@ function renderTask(task,submission){
  card.appendChild(area);return card;
 }
 async function loadTasks(){
- const {data:tasks,error}=await db.from("staff_tasks").select("id,title,description,instructions,reward_amount,deadline_at").eq("status","published").or("deadline_at.is.null,deadline_at.gt."+new Date().toISOString()).order("created_at",{ascending:false});
+ const {data:tasks,error}=await db.from("staff_tasks").select("id,title,description,instructions,reward_amount,task_type,boost_percent,deadline_at").eq("status","published").or("deadline_at.is.null,deadline_at.gt."+new Date().toISOString()).order("created_at",{ascending:false});
  if(error){say("Could not load available tasks: "+error.message);return}
  const {data:subs,error:subError}=await db.from("staff_task_submissions").select("id,task_id,status,submitted_at,review_note").order("submitted_at",{ascending:false});
  if(subError){say("Could not load your submissions: "+subError.message);return}

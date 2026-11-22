@@ -409,7 +409,7 @@ async function loadStaff(){
  body.innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
  try{
   const session=await getAdminSession();
-  const data=await restGet("staff_profiles?select=user_id,display_name,referral_code,referred_by,status,ton_wallet_address,wallet_verified_at,verification_fee_status,created_at&order=created_at.desc",session);
+  const data=await restGet("staff_profiles?select=user_id,display_name,telegram_username,referral_code,referred_by,status,ton_wallet_address,wallet_verified_at,verification_fee_status,created_at&order=created_at.desc",session);
   if(!Array.isArray(data))throw new Error("Unexpected response from staff_profiles API.");
   const wallets=await restGet("staff_wallets?select=id,user_id,balance,currency,wallet_status",session);
   staffWalletsByUser={};wallets.forEach(w=>staffWalletsByUser[w.user_id]=w);
@@ -419,10 +419,13 @@ async function loadStaff(){
    const walletText=verified?"Verified · "+esc(x.ton_wallet_address):"Not verified";
    const iw=staffWalletsByUser[x.user_id];
    const balance=iw?Number(iw.balance).toFixed(9)+" EMPC":"Wallet not created";
-   const actions='<button data-open-wallet="'+esc(x.user_id)+'">Manage wallet</button> '+(x.status==="active"
-    ?'<button class="danger" data-staff-action="suspend" data-staff-id="'+esc(x.user_id)+'">Suspend</button>'
-    :'<button data-staff-action="restore" data-staff-id="'+esc(x.user_id)+'">Restore to invited</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>');
-   return '<tr><td>'+esc(x.display_name)+'</td><td><small>'+esc(x.user_id)+'</small></td><td>'+esc(x.referral_code)+'</td><td><span class="pill '+(x.status==="active"?"visible":(x.status==="suspended"||x.status==="rejected"?"hidden":""))+'">'+esc(x.status)+'</span></td><td>'+walletText+'</td><td>'+esc(x.verification_fee_status)+'</td><td>'+esc(balance)+'</td><td><div class="actions">'+actions+'</div></td></tr>';
+   const actions='<button data-open-wallet="'+esc(x.user_id)+'">Manage wallet</button> '+(x.status==="invited"
+    ?'<button class="primary" data-staff-action="approve" data-staff-id="'+esc(x.user_id)+'">Approve registration</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>'
+    :x.status==="active"
+      ?'<button class="danger" data-staff-action="suspend" data-staff-id="'+esc(x.user_id)+'">Suspend</button>'
+      :'<button data-staff-action="restore" data-staff-id="'+esc(x.user_id)+'">Return to review</button><button class="danger" data-staff-action="reject" data-staff-id="'+esc(x.user_id)+'">Reject</button>');
+   const telegramLabel=x.telegram_username?'Telegram: @'+esc(x.telegram_username):'Telegram bot not linked';
+   return '<tr><td>'+esc(x.display_name)+'<br><small>'+telegramLabel+'</small></td><td><small>'+esc(x.user_id)+'</small></td><td>'+esc(x.referral_code)+'</td><td><span class="pill '+(x.status==="active"?"visible":(x.status==="suspended"||x.status==="rejected"?"hidden":""))+'">'+esc(x.status)+'</span></td><td>'+walletText+'</td><td>'+esc(x.verification_fee_status)+'</td><td>'+esc(balance)+'</td><td><div class="actions">'+actions+'</div></td></tr>';
   }).join("");
   body.querySelectorAll("[data-staff-action]").forEach(b=>b.addEventListener("click",()=>changeStaffStatus(b.dataset.staffId,b.dataset.staffAction)));
   body.querySelectorAll("[data-open-wallet]").forEach(b=>b.addEventListener("click",()=>openStaffWallet(b.dataset.openWallet,data.find(x=>x.user_id===b.dataset.openWallet))));
@@ -482,8 +485,8 @@ async function applyStaffWalletChange(){
 document.getElementById("closeWalletPanel").addEventListener("click",()=>{document.getElementById("staffWalletPanel").style.display="none";selectedStaffWallet=null;});
 document.getElementById("applyWalletChange").addEventListener("click",applyStaffWalletChange);
 async function changeStaffStatus(userId,action){
- const next=action==="suspend"?"suspended":action==="reject"?"rejected":"invited";
- const label=action==="suspend"?"suspend":action==="reject"?"reject":"restore to invited";
+ const next=action==="suspend"?"suspended":action==="reject"?"rejected":action==="approve"?"pending_payment":"invited";
+ const label=action==="suspend"?"suspend":action==="reject"?"reject":action==="approve"?"approve this registration (staff access remains locked until activation requirements are met)":"return to review";
  if(!confirm("Are you sure you want to "+label+" this staff profile?"))return;
  const msg=document.getElementById("staffMessage");
  msg.textContent="Updating staff status…";

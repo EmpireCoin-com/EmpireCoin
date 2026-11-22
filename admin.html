@@ -262,7 +262,13 @@ document.getElementById("refreshTelegramWebhook").addEventListener("click",async
   });
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!result.ok)throw new Error(result.error||result.details||("Request failed (HTTP "+response.status+")"));
-  resultEl.textContent="SUCCESS · Telegram webhook refreshed. Channel 👍 reactions can now be received.";
+  const info=result.webhook_info||{};
+   const allowed=Array.isArray(info.allowed_updates)?info.allowed_updates.join(", "):"not reported";
+   const pending=Number(info.pending_update_count||0);
+   const urlStatus=result.webhook_url_matches?"URL verified":"URL mismatch";
+   const lastError=info.last_error_message?(" · Telegram error: "+info.last_error_message):" · no recent Telegram webhook error";
+   const diagnosticError=result.webhook_info_error?(" · Diagnostic: "+result.webhook_info_error):"";
+   resultEl.textContent="Webhook registered · "+urlStatus+" · pending updates: "+pending+" · allowed updates: "+allowed+lastError+diagnosticError;
  }catch(e){resultEl.textContent="Webhook refresh failed: "+(e.message||"Unknown error");}
  finally{button.disabled=false}
 });
